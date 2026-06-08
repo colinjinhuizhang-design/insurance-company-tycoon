@@ -35,17 +35,17 @@
 - [x] Release branch created
 - [x] .gitignore reviewed
 - [x] Changes committed
-- [ ] Remote verified - no remote is currently configured
-- [ ] Branch pushed
+- [x] Remote verified
+- [x] Branch pushed
 - [ ] Pull request created if needed
 - [ ] Main branch updated if appropriate
 
 ## GitHub Pages checklist
 
-- [ ] Pages source selected
-- [ ] Site deployed
-- [ ] Published URL opened
-- [ ] README updated with published URL
+- [x] Pages source selected
+- [x] Site deployed
+- [x] Published URL opened
+- [x] README updated with published URL
 - [ ] Final release tag created if appropriate
 
 ## Future update checklist

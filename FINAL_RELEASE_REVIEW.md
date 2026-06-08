@@ -78,22 +78,15 @@ Release commit was created with message `Polish Insurance Company Tycoon for Git
 
 ## GitHub publishing status
 
-GitHub publishing did not complete because no git remote is configured. Push and Pages verification require a GitHub repository remote and authentication.
-
-Next commands after creating a GitHub repository:
-
-```bash
-git remote add origin <REPOSITORY_URL>
-git push -u origin release/insurance-company-tycoon-polish
-```
+GitHub publishing succeeded. The release branch was pushed to GitHub and GitHub Pages was enabled from the branch root.
 
 ## GitHub repository URL
 
-Not available yet.
+https://github.com/colinjinhuizhang-design/insurance-company-tycoon
 
 ## GitHub Pages URL
 
-Not available yet.
+https://colinjinhuizhang-design.github.io/insurance-company-tycoon/
 
 ## Known limitations
 

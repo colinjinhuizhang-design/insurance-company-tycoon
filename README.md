@@ -4,7 +4,7 @@ An original browser-based insurance company management simulation. You run a sma
 
 The project is static HTML, CSS and JavaScript. It is runnable from `index.html`, uses `localStorage`, and is designed for GitHub Pages.
 
-Published URL: not available yet. Add this only after the GitHub Pages site is deployed and verified.
+Published URL: https://colinjinhuizhang-design.github.io/insurance-company-tycoon/
 
 ## Run Locally
 
