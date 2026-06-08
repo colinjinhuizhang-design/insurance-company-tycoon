@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+build/
+.cache/
+.tmp/
+temp/
+*.log
+coverage/
+.playwright/
+test-results/
+screenshots/temp/
+browser-profiles/
+outputs/**
+!outputs/
+!outputs/release-smoke.mjs

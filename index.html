@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insurance Company Tycoon</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar pixel-card">
+      <div>
+        <p class="eyebrow">Original Actuarial Management Tycoon</p>
+        <h1>Insurance Company Tycoon</h1>
+        <p class="subtitle">Build a tiny insurance company, hire specialists, design products, manage risk and win trophies.</p>
+      </div>
+    </header>
+
+    <section class="setup pixel-card home-setup">
+      <label>CEO name
+        <input id="playerName" value="Colin" />
+      </label>
+      <label>Company name
+        <input id="companyName" value="Little Insurance Company" />
+      </label>
+    </section>
+
+    <section id="gameControlBar" class="game-control-bar pixel-card" aria-label="Universal game controls">
+      <div class="control-status-strip">
+        <span><b id="globalDate">Y1 Jan</b><small>Month</small></span>
+        <span><b id="globalCash">$650,000</b><small>Cash</small></span>
+        <span><b id="globalRep">5.0/10</b><small>Rep</small></span>
+        <span><b id="globalSolvency">150%</b><small>Solvency</small></span>
+        <span><b id="globalRisk">Low</b><small>Risk</small></span>
+        <span><b id="globalSaveStatus">Saved</b><small>Save</small></span>
+      </div>
+      <div class="global-actions">
+        <button id="advanceBtn" class="primary" type="button">Advance</button>
+        <button id="autoBtn" type="button">Auto 12</button>
+        <button id="contractBtn" type="button">Consult</button>
+        <button id="saveBtn" class="ghost" type="button">Save</button>
+        <button id="loadBtn" class="ghost" type="button">Load</button>
+        <button class="ghost" type="button" data-quick-tab="settings">Menu</button>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <div class="kpi"><span>Date</span><strong id="dateKpi">Y1 Jan</strong></div>
+      <div class="kpi"><span>Cash</span><strong id="cashKpi">$650,000</strong></div>
+      <div class="kpi"><span>Fans</span><strong id="fansKpi">1,000</strong></div>
+      <div class="kpi"><span>Reputation</span><strong id="repKpi">5.0/10</strong></div>
+      <div class="kpi"><span>Solvency</span><strong id="solvencyKpi">150%</strong></div>
+      <div class="kpi"><span>Office</span><strong id="officeKpi">Lv 1</strong></div>
+    </section>
+
+    <nav class="tabs pixel-card">
+      <button class="tab active" data-tab="studio">Studio</button>
+      <button class="tab" data-tab="staff">Staff</button>
+      <button class="tab" data-tab="project">Lab</button>
+      <button class="tab" data-tab="officePanel">Office</button>
+      <button class="tab" data-tab="finance">Finance</button>
+      <button class="tab" data-tab="events">Events</button>
+      <button class="tab" data-tab="quiz">Championship</button>
+      <button class="tab" data-tab="awards">Awards</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+
+    <main>
+      <section id="studio" class="panel active">
+        <div class="layout-two">
+          <article class="pixel-card office-card">
+            <div class="card-head">
+              <h2>Animated office</h2>
+              <span class="status-pill">Studio headquarters</span>
+            </div>
+            <div class="office-toolbar" aria-label="Office view controls">
+              <button id="officeZoomOut" type="button">Zoom Out</button>
+              <button id="officeZoomReset" type="button">Reset View</button>
+              <button id="officeZoomIn" type="button">Zoom In</button>
+            </div>
+            <div id="officeViewport" class="office-viewport">
+              <div id="office" class="office-map"></div>
+            </div>
+            <div class="office-info-grid">
+              <div id="officeTeamStatus" class="summary-box">Team mood and stamina will appear here.</div>
+              <div id="officeDetail" class="summary-box">Click a staff member or furniture item to inspect it.</div>
+              <div id="officeEventLog" class="summary-box">Office routines will appear here.</div>
+            </div>
+            <div id="toastLog" class="ticker">Open the Lab or recruit a specialist.</div>
+          </article>
+
+          <aside class="side-stack">
+            <article class="pixel-card first-guide-card">
+              <h2>First goals</h2>
+              <div class="summary-box compact-guide">Hire or train staff, design one product in the Lab, then advance the month and watch cash, claims and solvency.</div>
+            </article>
+            <article class="pixel-card">
+              <h2>Studio dashboard</h2>
+              <div id="studioDashboard" class="summary-box"></div>
+              <div id="recommendedAction" class="summary-box recommended-box">Recommended next action will appear here.</div>
+              <div class="quick-grid">
+                <button data-quick-tab="staff">Hire Staff</button>
+                <button data-quick-tab="project">Design Product</button>
+                <button data-quick-tab="staff">Train Team</button>
+                <button data-quick-tab="officePanel">Renovate Office</button>
+                <button data-quick-tab="officePanel">Buy Equipment</button>
+                <button data-quick-tab="quiz">Enter CEO Championship</button>
+              </div>
+            </article>
+            <article class="pixel-card">
+              <h2>Current project</h2>
+              <div id="projectMini" class="summary-box">No active project.</div>
+            </article>
+            <article class="pixel-card">
+              <h2>Monthly newspaper</h2>
+              <div id="newspaperText" class="newspaper">Tiny insurer opens with careful pricing and a small team.</div>
+            </article>
+            <article class="pixel-card">
+              <h2>CEO tip</h2>
+              <div id="ceoTip" class="event-text">High profit loading improves margin, but customers may leave if prices feel unfair.</div>
+            </article>
+            <article class="pixel-card">
+              <h2>Trophy shelf</h2>
+              <div id="trophyShelf" class="badges"></div>
+            </article>
+            <article class="pixel-card">
+              <h2>Achievements</h2>
+              <div id="achievementList" class="badges"></div>
+            </article>
+          </aside>
+        </div>
+      </section>
+
+      <section id="project" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <h2>Product design studio</h2>
+            <p class="muted">Tune the product before development. The forecast updates immediately and uses plain-language warnings.</p>
+            <div class="form-grid">
+              <label>Product type
+                <select id="productType">
+                  <option value="Term10">10-Year Term Life</option>
+                  <option value="WL_Insurance">Whole Life Insurance</option>
+                  <option value="Endow10">10-Year Endowment</option>
+                  <option value="WL_Annuity">Whole Life Annuity</option>
+                  <option value="RetirementIncome">Retirement Income Plan</option>
+                  <option value="FamilyProtection">Family Protection Plan</option>
+                  <option value="EducationSavings">Education Savings Cover</option>
+                  <option value="SeniorCare">Senior Care Income Plan</option>
+                </select>
+              </label>
+              <label>Product name
+                <input id="productName" placeholder="Auto-generate if blank" />
+              </label>
+              <label>Target segment
+                <select id="segment">
+                  <option value="35">Young Families (age 35)</option>
+                  <option value="45">Growing Wealth (age 45)</option>
+                  <option value="55">Pre-Retirees (age 55)</option>
+                  <option value="65">Retirees (age 65)</option>
+                </select>
+              </label>
+              <label>Distribution channel
+                <select id="channel">
+                  <option value="Online">Online Direct</option>
+                  <option value="Adviser">Financial Adviser</option>
+                  <option value="Employer">Employer Partnership</option>
+                  <option value="Bank">Bank Branch</option>
+                </select>
+              </label>
+            </div>
+            <div class="advanced-settings">
+              <h3>Advanced Actuarial Settings</h3>
+              <p class="muted">These settings drive price, risk and launch forecasts. They live here because the Studio screen should feel like an office, not a spreadsheet.</p>
+              <div class="form-grid">
+                <label>Default benefit
+                  <input id="benefit" type="number" value="100000" min="10000" step="5000" />
+                  <small>Higher benefit creates more protection, but larger claim exposure.</small>
+                </label>
+                <label>Default annuity payment
+                  <input id="annPayment" type="number" value="10000" min="1000" step="1000" />
+                  <small>Used by annuity and retirement income products.</small>
+                </label>
+              <label>Profit loading <span id="loadingVal">15%</span>
+                <input id="loading" type="range" min="0.02" max="0.50" step="0.01" value="0.15" />
+                <small>Higher loading means more profit per sale, but lower sales chance.</small>
+              </label>
+              <label>Interest assumption <span id="assumedInterestVal">4.0%</span>
+                <input id="assumedInterest" type="range" min="0.01" max="0.08" step="0.005" value="0.04" />
+                <small>Higher assumed interest can reduce price, but increases model risk.</small>
+              </label>
+              <label>Mortality margin <span id="mortalityMarginVal">10%</span>
+                <input id="mortalityMargin" type="range" min="-0.15" max="0.40" step="0.01" value="0.10" />
+                <small>Safer assumptions reduce future claim risk, but raise price.</small>
+              </label>
+              <label>Marketing budget <span id="marketingBudgetVal">$25,000</span>
+                <input id="marketingBudget" type="range" min="0" max="150000" step="5000" value="25000" />
+                <small>Increases buzz, fans and sales. Weak products can waste spend.</small>
+              </label>
+              <label>Underwriting strictness <span id="underwritingStrictnessVal">50</span>
+                <input id="underwritingStrictness" type="range" min="0" max="100" step="5" value="50" />
+                <small>Stricter underwriting lowers claim risk but accepts fewer customers.</small>
+              </label>
+              <label>Service quality <span id="serviceQualityVal">55</span>
+                <input id="serviceQuality" type="range" min="10" max="100" step="5" value="55" />
+                <small>Improves trust and retention, but increases running cost.</small>
+              </label>
+              <label>Compliance review depth <span id="complianceDepthVal">55</span>
+                <input id="complianceDepth" type="range" min="0" max="100" step="5" value="55" />
+                <small>Deep compliance is slower, safer and lowers penalty risk.</small>
+              </label>
+              <label>Product complexity <span id="productComplexityVal">45</span>
+                <input id="productComplexity" type="range" min="10" max="100" step="5" value="45" />
+                <small>Can improve uniqueness and review score, but adds time and failure risk.</small>
+              </label>
+              </div>
+            </div>
+            <button id="startProjectBtn" class="success">Start Development</button>
+            <div id="pricingPreview" class="summary-box price-preview"></div>
+          </article>
+
+          <article class="pixel-card">
+            <h2>Forecast board</h2>
+            <div id="forecastPanel" class="forecast-grid"></div>
+            <h2>Development pipeline</h2>
+            <div id="projectDetail" class="summary-box">No active project.</div>
+            <div id="projectChoice" class="choice-box hidden"></div>
+          </article>
+        </div>
+        <article class="pixel-card">
+          <h2>Launch report and released products</h2>
+          <div id="launchReport" class="summary-box">No product launched yet.</div>
+          <div class="table-wrap"><table id="productTable"></table></div>
+        </article>
+      </section>
+
+      <section id="staff" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <div class="card-head">
+              <h2>Hiring market</h2>
+              <button id="refreshCandidatesBtn">Refresh candidates</button>
+            </div>
+            <div id="capacitySummary" class="summary-box"></div>
+            <div id="candidateGrid" class="candidate-grid"></div>
+          </article>
+
+          <article class="pixel-card">
+            <h2>Training academy</h2>
+            <div class="form-grid compact-form">
+              <label>Staff member
+                <select id="trainingStaff"></select>
+              </label>
+              <label>Course
+                <select id="trainingCourse"></select>
+              </label>
+            </div>
+            <div id="trainingPreview" class="summary-box"></div>
+            <button id="beginTrainingBtn" class="primary">Start Training Quiz</button>
+          </article>
+        </div>
+
+        <article class="pixel-card">
+          <div class="card-head">
+            <h2>Team roster</h2>
+            <div class="actions-row">
+              <button id="restAllBtn">Rest All</button>
+              <button id="trainAllBtn">Quick Drill</button>
+            </div>
+          </div>
+          <div id="staffGrid" class="staff-grid"></div>
+        </article>
+      </section>
+
+      <section id="officePanel" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <h2>Office renovation</h2>
+            <div id="renovationPanel" class="summary-box"></div>
+            <button id="upgradeBtn" class="success">Renovate Office</button>
+          </article>
+          <article class="pixel-card">
+            <h2>Office capacity</h2>
+            <div id="equipmentSummary" class="summary-box"></div>
+            <div class="office-shop-filters" id="equipmentFilters" aria-label="Equipment filters"></div>
+          </article>
+        </div>
+        <article class="pixel-card">
+          <h2>Equipment shop</h2>
+          <div id="equipmentShop" class="equipment-grid"></div>
+        </article>
+      </section>
+
+      <section id="events" class="panel">
+        <article class="pixel-card">
+          <h2>Monthly newspaper</h2>
+          <div id="eventsNewspaper" class="newspaper">Tiny insurer opens with careful pricing and a small team.</div>
+        </article>
+        <article class="pixel-card">
+          <h2>Recent office events</h2>
+          <div id="eventsLog" class="summary-box">No events yet.</div>
+        </article>
+        <article class="pixel-card">
+          <h2>Monthly summary</h2>
+          <div id="monthlySummaryPanel" class="summary-box">Advance a month to see premium income, claims, expenses and team changes.</div>
+        </article>
+      </section>
+
+      <section id="finance" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <h2>Cash chart</h2>
+            <canvas id="cashChart" width="900" height="320"></canvas>
+          </article>
+          <article class="pixel-card">
+            <h2>Company summary</h2>
+            <div id="financeSummary" class="summary-box"></div>
+          </article>
+        </div>
+        <article class="pixel-card">
+          <h2>Cash-flow log</h2>
+          <div class="table-wrap"><table id="cashTable"></table></div>
+        </article>
+      </section>
+
+      <section id="quiz" class="panel">
+        <article class="pixel-card game-show">
+          <h2>CEO Insurance Knowledge Championship</h2>
+          <div id="quizStatus" class="event-text"></div>
+          <div id="quizActions" class="actions-row">
+            <button id="enterCompetitionBtn" class="primary">Enter Championship</button>
+            <button id="skipCompetitionBtn">Skip This Year</button>
+          </div>
+          <div id="quizProgress" class="quiz-progress hidden"></div>
+          <form id="quizForm"></form>
+          <button id="submitQuizBtn" class="primary hidden">Submit Answers</button>
+          <div id="quizResult" class="summary-box"></div>
+        </article>
+      </section>
+
+      <section id="awards" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <h2>Trophy shelf</h2>
+            <div id="awardsTrophyShelf" class="badges"></div>
+          </article>
+          <article class="pixel-card">
+            <h2>Achievements</h2>
+            <div id="awardsAchievementList" class="badges"></div>
+          </article>
+        </div>
+        <article class="pixel-card">
+          <h2>Awards cabinet</h2>
+          <div id="awardsCabinet" class="badges"></div>
+        </article>
+        <article class="pixel-card">
+          <div class="card-head">
+            <h2>Local leaderboard</h2>
+            <button id="publishBtn" class="success">Publish Current Run</button>
+          </div>
+          <p class="muted">Stored locally in this browser. Score rewards cash, reputation, fans, trophies, achievements and solvency.</p>
+          <div class="table-wrap"><table id="leaderboardTable"></table></div>
+        </article>
+      </section>
+
+      <section id="settings" class="panel">
+        <div class="layout-two">
+          <article class="pixel-card">
+            <h2>Save and display</h2>
+            <div class="settings-grid">
+              <button id="settingsSaveBtn" class="ghost" type="button">Save</button>
+              <button id="settingsLoadBtn" class="ghost" type="button">Load</button>
+              <button id="resetBtn" class="danger" type="button">Reset Run</button>
+            </div>
+            <div class="settings-toggles">
+              <label class="toggle-row">
+                <input id="animationToggle" type="checkbox" checked />
+                <span>Animation effects</span>
+              </label>
+              <label class="toggle-row">
+                <input id="compactMobileToggle" type="checkbox" />
+                <span>Compact mobile controls</span>
+              </label>
+            </div>
+          </article>
+          <article class="pixel-card">
+            <h2>Shortcuts</h2>
+            <div class="summary-box">Space or Enter: Advance one month
+Shift + A: Auto 12 months
+S: Save
+
+Shortcuts pause while typing or while a quiz/training modal is open.</div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="trainingModal" class="modal hidden">
+    <div class="modal-card pixel-card training-quiz-card">
+      <div class="card-head training-quiz-head">
+        <div>
+          <p class="eyebrow">Skill Bonus Challenge</p>
+          <h2>Training Knowledge Test</h2>
+        </div>
+        <button id="cancelTrainingBtn" class="ghost">Cancel</button>
+      </div>
+      <div id="trainingQuizMeta" class="summary-box"></div>
+      <form id="trainingQuizForm"></form>
+      <div class="training-modal-footer">
+        <button id="trainingBackBtn" class="ghost" type="button">Back</button>
+        <button id="finishTrainingBtn" class="primary" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="achievementPop" class="achievement-pop hidden"></div>
+  <script src="src/data/staffSprites.js"></script>
+  <script src="src/data/roleVisuals.js"></script>
+  <script src="src/data/furniture.js"></script>
+  <script src="src/data/officeLayouts.js"></script>
+  <script src="src/systems/PathfindingSystem.js"></script>
+  <script src="src/systems/OfficeLayoutSystem.js"></script>
+  <script src="src/systems/FurnitureSystem.js"></script>
+  <script src="src/systems/StaffRoutineSystem.js"></script>
+  <script src="src/systems/MoodSystem.js"></script>
+  <script src="src/systems/AvatarSystem.js"></script>
+  <script src="src/systems/OfficeAnimationSystem.js"></script>
+  <script src="src/systems/ResponsiveOfficeSystem.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
