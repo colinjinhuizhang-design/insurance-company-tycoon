@@ -30,11 +30,13 @@ http://localhost:8000
 
 1. Start in Studio and review the recommended next action.
 2. Hire staff in Staff.
-3. Start an insurance product in Lab.
-4. Buy equipment or renovate in Office when capacity is tight.
-5. Advance months from the global control bar.
-6. Watch cash, claims, reputation, risk and solvency.
-7. Train staff, enter the Championship, and collect awards.
+3. Open Lab and choose a preset if you want a safer product design.
+4. Check the launch readiness meter before starting development.
+5. Start an insurance product in Lab.
+6. Buy equipment or renovate in Office when capacity is tight.
+7. Advance months from the global control bar.
+8. Watch cash, claims, reputation, risk and solvency.
+9. Train staff, enter the Championship, and collect awards.
 
 ## Project Structure
 

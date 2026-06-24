@@ -915,7 +915,9 @@ function runPolicyExperience() {
   const underwriterHelp = state.staff.filter(m => m.role === "Underwriter").length * .05;
   for (const p of state.policies) {
     if (p.active <= 0) continue;
+    const activeAtStart = p.active;
     p.monthsInforce += 1;
+    premiums += activeAtStart * monthlyPremiumForPolicy(p);
     const ageNow = p.age + Math.floor(p.monthsInforce / 12);
     const claimRiskFactor = 1 + (p.claimRisk || 40) / 100 - effects.claimShock - underwriterHelp;
     const monthlyDeathProb = clamp((qxAt(ageNow) * state.mortalityShock * claimRiskFactor) / 12, 0, 1);
@@ -1123,6 +1125,7 @@ function launchProject() {
       payment: p.annPayment * spec.factor,
       fair,
       loaded,
+      monthlyPremium: Math.max(8, loaded * (spec.annuity ? .014 : .018)),
       claimRisk: riskRating,
       regulatoryRisk,
       serviceQuality: d.serviceQuality,
@@ -1594,6 +1597,11 @@ function addCashFlow(kind, net, income, expenses, note) {
 
 function addFloater(text, type="good") {
   state.floaters.push({id:cryptoId(), text, type, ttl:3, x:rand(20,80), y:rand(30,78)});
+}
+
+function monthlyPremiumForPolicy(policy) {
+  const rate = policy.annuity ? .014 : .018;
+  return Math.max(8, Number(policy.monthlyPremium) || Number(policy.loaded || 0) * rate);
 }
 
 function checkAchievements() {
@@ -2378,6 +2386,7 @@ function renderPricingPreview() {
   if (!box || !forecastBox) return;
   const inp = getInputs();
   const forecast = calcForecast(inp);
+  const readiness = launchReadiness(forecast);
   const assumptionLabel = PRODUCT_SPECS[inp.product].annuity ? "Annual annuity payment" : "Sum assured";
   const assumptionValue = PRODUCT_SPECS[inp.product].annuity ? inp.annPayment : inp.benefit;
   box.innerHTML = `
@@ -2392,6 +2401,12 @@ function renderPricingPreview() {
     </div>
   `;
   forecastBox.innerHTML = `
+    <div class="launch-readiness ${readiness.className}">
+      <span>Launch readiness</span>
+      <strong>${readiness.label}</strong>
+      <div class="readiness-meter"><i style="width:${readiness.score}%"></i></div>
+      <p>${escapeHtml(readiness.advice)}</p>
+    </div>
     ${forecastCard("Design months", `${forecast.designMonths}`)}
     ${forecastCard("Product quality", `${Math.round(forecast.quality)}/100`)}
     ${forecastCard("Review range", `${forecast.reviewLow.toFixed(1)}-${forecast.reviewHigh.toFixed(1)}/10`)}
@@ -2405,6 +2420,21 @@ function renderPricingPreview() {
       ${forecast.warnings.length ? forecast.warnings.map(w => `<div class="warning ${w.type === "bad" ? "bad-warning" : "good-warning"}">${escapeHtml(w.text)}</div>`).join("") : `<div class="warning good-warning">Balanced design: no major warnings.</div>`}
     </div>
   `;
+}
+
+function launchReadiness(forecast) {
+  const score = clamp(Math.round(
+    forecast.salesChance * .24 +
+    forecast.customerTrust * .19 +
+    forecast.regulatoryApproval * .19 +
+    forecast.quality * .18 +
+    Math.max(0, forecast.profitMargin + 10) * .45 -
+    forecast.claimRisk * .16 -
+    forecast.designMonths * 1.8
+  ), 0, 100);
+  if (score >= 72) return {score, className:"ready", label:"Ready to grow", advice:"This product has a healthy mix of sales, trust, margin and risk control."};
+  if (score >= 50) return {score, className:"watch", label:"Needs watching", advice:"Playable, but check warnings before launch. Reduce complexity or risk if cash is tight."};
+  return {score, className:"risky", label:"Too risky now", advice:"Simplify the product, lower marketing spend, reduce loading, or improve underwriting/compliance before starting."};
 }
 
 function forecastCard(label, value) {
@@ -2996,6 +3026,9 @@ function initEvents() {
     const input = $(id);
     if (input) input.addEventListener("input", markUnsaved);
   });
+  document.querySelectorAll("[data-product-preset]").forEach(btn => {
+    btn.addEventListener("click", () => applyProductPreset(btn.dataset.productPreset));
+  });
   document.querySelectorAll("[data-quick-tab]").forEach(btn => btn.addEventListener("click", () => {
     switchTab(btn.dataset.quickTab);
   }));
@@ -3013,6 +3046,36 @@ function initEvents() {
   });
   document.addEventListener("keydown", handleGlobalShortcut);
   bindOfficeViewportPan();
+}
+
+function applyProductPreset(preset) {
+  const presets = {
+    safe: {
+      productType:"FamilyProtection", productName:"Family Shield Starter", segment:"35", channel:"Online",
+      benefit:"100000", annPayment:"10000", loading:"0.15", assumedInterest:"0.04", mortalityMargin:"0.12",
+      marketingBudget:"30000", underwritingStrictness:"60", serviceQuality:"58", complianceDepth:"58", productComplexity:"35"
+    },
+    growth: {
+      productType:"Term10", productName:"Quick Growth Term", segment:"35", channel:"Online",
+      benefit:"85000", annPayment:"10000", loading:"0.12", assumedInterest:"0.04", mortalityMargin:"0.08",
+      marketingBudget:"52000", underwritingStrictness:"48", serviceQuality:"50", complianceDepth:"45", productComplexity:"40"
+    },
+    premium: {
+      productType:"WL_Insurance", productName:"Trusted Whole Life", segment:"45", channel:"Adviser",
+      benefit:"120000", annPayment:"10000", loading:"0.20", assumedInterest:"0.04", mortalityMargin:"0.14",
+      marketingBudget:"42000", underwritingStrictness:"66", serviceQuality:"72", complianceDepth:"70", productComplexity:"52"
+    }
+  };
+  const selected = presets[preset] || presets.safe;
+  Object.entries(selected).forEach(([id, value]) => {
+    const el = $(id);
+    if (el) el.value = value;
+  });
+  state.designSettings = getInputs();
+  markUnsaved();
+  syncDesignLabels();
+  renderProject();
+  toast(`${preset === "growth" ? "Growth" : preset === "premium" ? "Premium trust" : "Safe starter"} preset applied.`);
 }
 
 function loadSavedRun() {

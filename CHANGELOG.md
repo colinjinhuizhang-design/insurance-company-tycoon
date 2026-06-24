@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.1.0 - Studio UI Polish
+
+### Added
+
+- Beginner starter-goal checklist on Studio.
+- Product Lab preset buttons: Safe Starter, Growth Push and Premium Trust.
+- Launch readiness meter with plain-language advice.
+- Smoke-test coverage for product presets and launch readiness.
+
+### Improved
+
+- Reverted the V2 farm concept and returned to the previous insurance-studio version.
+- Improved Product Lab hierarchy so players can see whether a product is launchable before starting development.
+- Active policies now generate recurring monthly premium income, making product survival fairer after launch.
+- Fixed the recommended-action label color token.
+
+### Known limitations
+
+- The game still uses original CSS placeholder art.
+- Long-term balance still needs extended playtesting beyond smoke tests.
+
 ## 1.0.0 - Initial GitHub Pages Release Candidate
 
 ### Added

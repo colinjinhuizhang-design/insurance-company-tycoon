@@ -238,7 +238,7 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--primary); }
 }
 
 .rec-kicker {
-  color: var(--blue);
+  color: var(--primary);
   font-size: .76rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -280,6 +280,34 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--primary); }
 .studio-stat.up i { background: var(--mint); }
 .studio-stat.down i,
 .studio-stat.warn i { background: #ffd2d2; }
+
+.starter-steps {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.starter-steps span {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #f7fbff;
+  font-weight: 900;
+}
+
+.starter-steps b {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--mint);
+}
 
 .studio-now {
   padding: 10px;
@@ -1980,6 +2008,58 @@ input[type="range"] { padding: 0; border: 0; accent-color: var(--primary); }
 }
 
 .metric strong, .forecast-card strong { display: block; margin-top: 3px; font-size: 1rem; }
+
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 12px 0 16px;
+}
+
+.preset-row button {
+  min-height: 52px;
+  background: linear-gradient(180deg, #fff, #eef7ff);
+}
+
+.launch-readiness {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: #f8fbff;
+  box-shadow: 4px 4px 0 rgba(38, 48, 68, .16);
+}
+
+.launch-readiness span {
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.launch-readiness strong { font-size: 1.2rem; }
+.launch-readiness p { margin: 0; color: var(--muted); }
+.launch-readiness.ready { background: #edfff5; }
+.launch-readiness.watch { background: #fff7d8; }
+.launch-readiness.risky { background: #fff0ee; }
+
+.readiness-meter {
+  height: 16px;
+  border: 3px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.readiness-meter i {
+  display: block;
+  height: 100%;
+  min-width: 4%;
+  border-right: 2px solid var(--line);
+  background: linear-gradient(90deg, var(--danger), var(--warning), var(--success));
+}
 .warning-list { display: grid; gap: 6px; margin-top: 10px; }
 .warning { border: 2px solid var(--warning); background: #fff6d8; border-radius: 8px; padding: 7px 9px; font-weight: 800; }
 .bad-warning { border-color: var(--danger); background: #fff0f0; }
@@ -2859,7 +2939,7 @@ canvas { display: block; width: 100%; background: #fff; border: 3px solid var(--
   .training-modal-footer button {
     width: auto;
   }
-  .setup, .home-setup, .kpi-grid, .layout-two, .form-grid, .candidate-grid, .equipment-grid, .staff-grid, .metric-grid, .forecast-grid, .quick-grid {
+  .setup, .home-setup, .kpi-grid, .layout-two, .form-grid, .candidate-grid, .equipment-grid, .staff-grid, .metric-grid, .forecast-grid, .quick-grid, .preset-row {
     grid-template-columns: 1fr;
   }
   .studio-stat-grid,

@@ -172,12 +172,15 @@ try {
 
   results.interactions.product = await evalJs(cdp, `(() => {
     document.querySelector('.tab[data-tab="project"]').click();
+    document.querySelector('[data-product-preset="safe"]').click();
+    const presetOk = document.querySelector("#productType").value === "FamilyProtection" && document.querySelector("#loading").value === "0.15";
+    const readinessVisible = !!document.querySelector(".launch-readiness")?.textContent.includes("Launch readiness");
     const name = document.querySelector("#productName");
     name.value = "Smoke Test Cover";
     name.dispatchEvent(new Event("input", { bubbles: true }));
     document.querySelector("#startProjectBtn").click();
     const started = !!document.querySelector("#projectMini")?.textContent.includes("Smoke Test Cover");
-    return { started, text: document.querySelector("#projectMini")?.textContent };
+    return { presetOk, readinessVisible, started, text: document.querySelector("#projectMini")?.textContent };
   })()`);
 
   results.interactions.advance = await evalJs(cdp, `(() => {
