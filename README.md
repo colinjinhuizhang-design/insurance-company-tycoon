@@ -6,6 +6,8 @@ The project is static HTML, CSS and JavaScript. It is runnable from `index.html`
 
 The animated office uses a local Phaser 3 renderer. Dense menus, tabs, product controls and save/load UI remain HTML so the game stays easy to maintain.
 
+The Studio layout uses compact command-board cards rather than nested scrolling side panels, so the page feels more like a game control room.
+
 The Office screen uses compact visual item cards and a shared item detail panel for equipment, furniture effects, assigned staff and buy actions.
 
 Published URL: https://colinjinhuizhang-design.github.io/insurance-company-tycoon/

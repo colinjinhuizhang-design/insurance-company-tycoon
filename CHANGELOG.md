@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.2 - Flatter Command Board Layout
+
+### Improved
+
+- Replaced the nested scrolling side-panel feel with flatter Studio command-board cards.
+- Combined current project, newspaper and CEO tip into one compact Live Brief card.
+- Combined trophies and achievements into one compact Awards Board card.
+- Compact game header, setup and global controls so tabs and Studio content appear sooner.
+- Medium-width desktop status chips now stay in one row instead of wrapping into a bulky block.
+
+### Fixed
+
+- Removed the sticky inner-scroll treatment from Studio and Office panels.
+
 ## 1.2.1 - Compact Item UI Polish
 
 ### Added

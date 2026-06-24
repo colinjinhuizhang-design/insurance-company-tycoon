@@ -8,6 +8,8 @@ Post-release UI pass: the Studio office now uses a local Phaser 3 canvas rendere
 
 Post-release item UI pass: the Office tab now uses a compact controls/shop/detail workbench, equipment cards use original visual icons with clear item states, and clicked Phaser office furniture updates a shared item detail card.
 
+Follow-up layout pass: the nested sticky/scroll panel treatment was removed in favor of flatter Studio command-board cards and a more compact game header.
+
 ## Major improvements
 
 - Studio is the main screen.
@@ -24,6 +26,7 @@ Post-release item UI pass: the Office tab now uses a compact controls/shop/detai
 - The Phaser office renders original procedural staff, furniture, mood/stamina bars, bubbles and effects.
 - Equipment and furniture details now show larger original item visuals, effect chips, assigned staff and buy/open-shop actions.
 - Mobile layout was compacted for 390 px and 430 px widths with no horizontal overflow in the smoke test.
+- The Studio side content was consolidated into Live Brief and Awards Board cards to reduce the rolling-panel feel.
 
 ## Files created
 
