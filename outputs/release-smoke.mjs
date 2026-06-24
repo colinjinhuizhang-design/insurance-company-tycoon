@@ -114,9 +114,7 @@ try {
       activePanel: document.querySelector(".panel.active")?.id,
       tabs,
       hasBoardTab: !!document.querySelector('[data-tab="board"]'),
-      hasFarmTab: !!document.querySelector('[data-tab="farm"]'),
       hasOffice: !!document.querySelector("#office"),
-      hasFarmScene: !!document.querySelector("#farmScene"),
       hasRecommended: !!document.querySelector("#recommendedAction"),
       globalSolvency: document.querySelector("#globalSolvency")?.textContent,
       globalRisk: document.querySelector("#globalRisk")?.textContent,
@@ -142,7 +140,7 @@ try {
 
   results.interactions.tabs = await evalJs(cdp, `(() => {
     const visited = [];
-    for (const id of ["farm", "staff", "project", "officePanel", "events", "finance", "quiz", "awards", "settings", "studio"]) {
+    for (const id of ["staff", "project", "officePanel", "events", "finance", "quiz", "awards", "settings", "studio"]) {
       document.querySelector(\`.tab[data-tab="\${id}"]\`).click();
       visited.push(document.querySelector(".panel.active")?.id);
     }
@@ -180,18 +178,6 @@ try {
     document.querySelector("#startProjectBtn").click();
     const started = !!document.querySelector("#projectMini")?.textContent.includes("Smoke Test Cover");
     return { started, text: document.querySelector("#projectMini")?.textContent };
-  })()`);
-
-  results.interactions.farmPlan = await evalJs(cdp, `(() => {
-    document.querySelector('.tab[data-tab="farm"]').click();
-    document.querySelector("#farmPlanSafeBtn").click();
-    return {
-      activePanel: document.querySelector(".panel.active")?.id,
-      productType: document.querySelector("#productType")?.value,
-      loading: document.querySelector("#loading")?.value,
-      marketingBudget: document.querySelector("#marketingBudget")?.value,
-      hasFarmMini: !!document.querySelector("#farmMini")?.textContent
-    };
   })()`);
 
   results.interactions.advance = await evalJs(cdp, `(() => {
