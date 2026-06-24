@@ -4,7 +4,7 @@ This project currently uses original placeholder visual assets created specifica
 
 No external image, audio, font, sprite, map, music or sound-effect assets are currently used.
 
-All staff sprites, office furniture, plants, trophy shelf, UI cards, animation effects, floating text and confetti are original placeholder visuals implemented inside this project. Phaser is used only as a MIT-licensed browser rendering engine.
+All staff sprites, office furniture, item detail previews, equipment icons, plants, trophy shelf, UI cards, animation effects, floating text and confetti are original placeholder visuals implemented inside this project. Phaser is used only as a MIT-licensed browser rendering engine.
 
 | Asset name | Source website | Creator | Licence | Commercial use allowed | Attribution required | Original download page | File path |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -12,7 +12,8 @@ All staff sprites, office furniture, plants, trophy shelf, UI cards, animation e
 | Full-body CSS staff avatar system | Local project | Codex-generated original placeholder art | Project-owned original placeholder | Yes | No | N/A | `style.css`, `src/data/roleVisuals.js`, `src/systems/AvatarSystem.js`, `src/systems/MoodSystem.js` |
 | Tile-based office furniture silhouettes and zone floors | Local project | Codex-generated original placeholder art | Project-owned original placeholder | Yes | No | N/A | `style.css`, `src/data/furniture.js`, `src/data/officeLayouts.js`, `src/systems/OfficeLayoutSystem.js`, `src/systems/FurnitureSystem.js` |
 | Phaser procedural office renderer | Local project | Codex-generated original Phaser Graphics code | Project-owned original placeholder | Yes | No | N/A | `src/systems/PhaserOfficeEngine.js` |
-| Equipment and office item silhouettes | Local project | Codex-generated original CSS and Phaser Graphics art | Project-owned original placeholder | Yes | No | N/A | `style.css`, `src/main.js`, `src/systems/PhaserOfficeEngine.js` |
+| Equipment shop and item detail silhouettes | Local project | Codex-generated original CSS and Phaser Graphics art | Project-owned original placeholder | Yes | No | N/A | `style.css`, `src/main.js`, `src/systems/PhaserOfficeEngine.js` |
+| Phaser furniture selection highlight | Local project | Codex-generated original Phaser Graphics art | Project-owned original placeholder | Yes | No | N/A | `src/systems/PhaserOfficeEngine.js` |
 | Shield favicon | Local project | Codex-generated original SVG art | Project-owned original placeholder | Yes | No | N/A | `assets/favicon.svg` |
 | Responsive office zoom and pan UI | Local project | Codex-generated original UI code | Project-owned original placeholder | Yes | No | N/A | `index.html`, `style.css`, `src/systems/ResponsiveOfficeSystem.js` |
 | Phaser 3.90.0 JavaScript game framework | cdnjs / Phaser | Photon Storm Ltd. and Phaser contributors | MIT License | Yes | No | https://cdnjs.com/libraries/phaser | `vendor/phaser.min.js`, `vendor/PHASER_LICENSE.md` |

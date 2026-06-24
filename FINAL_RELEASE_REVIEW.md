@@ -6,6 +6,8 @@ Insurance Company Tycoon was reviewed and improved through three review-improve-
 
 Post-release UI pass: the Studio office now uses a local Phaser 3 canvas renderer while the management HUD, tabs, forms and save/load UI remain HTML.
 
+Post-release item UI pass: the Office tab now uses a compact controls/shop/detail workbench, equipment cards use original visual icons with clear item states, and clicked Phaser office furniture updates a shared item detail card.
+
 ## Major improvements
 
 - Studio is the main screen.
@@ -20,6 +22,8 @@ Post-release UI pass: the Studio office now uses a local Phaser 3 canvas rendere
 - Release docs and update docs were added.
 - Phaser 3.90.0 is vendored locally and powers the animated office canvas.
 - The Phaser office renders original procedural staff, furniture, mood/stamina bars, bubbles and effects.
+- Equipment and furniture details now show larger original item visuals, effect chips, assigned staff and buy/open-shop actions.
+- Mobile layout was compacted for 390 px and 430 px widths with no horizontal overflow in the smoke test.
 
 ## Files created
 
@@ -56,15 +60,16 @@ Post-release UI pass: the Studio office now uses a local Phaser 3 canvas rendere
 
 - Browser target: local headless Microsoft Edge using the browser debugging protocol.
 - In-app browser connector: attempted, but setup failed in this environment, so headless Edge was used as the fallback.
-- Desktop result: Studio opened first, all tabs switched, no horizontal overflow, Phaser loaded, engine canvas mounted and rendered nonblank pixels, no console errors.
+- Desktop result: Studio opened first, all tabs switched, no horizontal overflow, Phaser loaded, engine canvas mounted and rendered nonblank pixels, equipment item details opened, selected furniture highlighted, no console errors.
 - Console errors: none reported by the smoke test.
 
 ## Mobile testing results
 
-- Viewport: 390 x 844.
-- Result: no unexpected horizontal overflow.
+- Viewports: 390 x 844 and 430 x 932.
+- Result: no unexpected horizontal overflow at either mobile size.
 - Phaser canvas mounted and rendered nonblank pixels at 390 x 844.
 - Advance button height: 45 px.
+- Equipment detail panel appeared before the shop list at 430 px, and shop buttons remained 45 px tall.
 - Active screen after reload: Studio.
 
 ## Save/load testing results
@@ -79,6 +84,7 @@ Post-release UI pass: the Studio office now uses a local Phaser 3 canvas rendere
 
 - No external images, audio, fonts, sprites, maps or music are used.
 - Current visuals are original HTML/CSS/JavaScript/Phaser Graphics placeholder assets.
+- Equipment icons, item detail previews and furniture highlights are original CSS/Phaser Graphics assets created for this project.
 - Phaser 3.90.0 is included as a MIT-licensed rendering framework in `vendor/phaser.min.js`.
 - `assets/ASSET_CREDITS.md` was updated.
 

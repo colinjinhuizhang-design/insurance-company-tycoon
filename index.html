@@ -68,7 +68,7 @@
 
     <main>
       <section id="studio" class="panel active">
-        <div class="layout-two">
+        <div class="layout-two studio-layout">
           <article class="pixel-card office-card">
             <div class="card-head">
               <h2>Animated office</h2>
@@ -285,22 +285,33 @@
       </section>
 
       <section id="officePanel" class="panel">
-        <div class="layout-two">
-          <article class="pixel-card">
-            <h2>Office renovation</h2>
-            <div id="renovationPanel" class="summary-box"></div>
-            <button id="upgradeBtn" class="success">Renovate Office</button>
+        <div class="office-workbench">
+          <aside class="office-control-column">
+            <article class="pixel-card compact-office-card">
+              <h2>Office renovation</h2>
+              <div id="renovationPanel" class="summary-box"></div>
+              <button id="upgradeBtn" class="success">Renovate Office</button>
+            </article>
+            <article class="pixel-card compact-office-card">
+              <h2>Office capacity</h2>
+              <div id="equipmentSummary" class="summary-box"></div>
+              <div class="office-shop-filters" id="equipmentFilters" aria-label="Equipment filters"></div>
+            </article>
+          </aside>
+          <article class="pixel-card equipment-shop-panel">
+            <div class="card-head">
+              <div>
+                <h2>Equipment shop</h2>
+                <p class="muted">Buy compact office items, workstations and morale boosters.</p>
+              </div>
+              <span class="status-pill">Visual item cards</span>
+            </div>
+            <div id="equipmentShop" class="equipment-grid"></div>
           </article>
-          <article class="pixel-card">
-            <h2>Office capacity</h2>
-            <div id="equipmentSummary" class="summary-box"></div>
-            <div class="office-shop-filters" id="equipmentFilters" aria-label="Equipment filters"></div>
-          </article>
+          <aside class="pixel-card equipment-detail-panel" id="equipmentDetailPanel">
+            Select an item to inspect its effect, cost and office role.
+          </aside>
         </div>
-        <article class="pixel-card">
-          <h2>Equipment shop</h2>
-          <div id="equipmentShop" class="equipment-grid"></div>
-        </article>
       </section>
 
       <section id="events" class="panel">

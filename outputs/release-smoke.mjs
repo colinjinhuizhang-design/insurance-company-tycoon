@@ -151,6 +151,8 @@ try {
       enginePixelProbe: ${enginePixelProbe},
       equipmentItemIcons: document.querySelectorAll("#equipmentShop .item-icon").length,
       oldEquipmentTextBadges: document.querySelectorAll("#equipmentShop .equipment-icon").length,
+      hasEquipmentDetailPanel: !!document.querySelector("#equipmentDetailPanel .item-detail-card"),
+      wholePageScrollRatio: Number((document.documentElement.scrollHeight / document.documentElement.clientHeight).toFixed(2)),
       officeEngineActive: document.querySelector("#officeViewport")?.classList.contains("engine-active"),
       officeEngineStatus: window.PhaserOfficeEngine?.status?.(),
       hasRecommended: !!document.querySelector("#recommendedAction"),
@@ -183,6 +185,28 @@ try {
       visited.push(document.querySelector(".panel.active")?.id);
     }
     return visited;
+  })()`);
+
+  results.interactions.itemDetails = await evalJs(cdp, `(() => {
+    document.querySelector('.tab[data-tab="officePanel"]').click();
+    const card = document.querySelector('#equipmentShop [data-select-equipment="coffee"]') || document.querySelector('#equipmentShop [data-select-equipment]');
+    card?.click();
+    const afterCard = {
+      activePanel: document.querySelector(".panel.active")?.id,
+      selectedCards: document.querySelectorAll("#equipmentShop .compact-equipment-card.selected").length,
+      detailHasLargeIcon: !!document.querySelector("#equipmentDetailPanel .item-icon--large"),
+      detailText: document.querySelector("#equipmentDetailPanel")?.textContent?.slice(0, 120),
+      actionButtons: document.querySelectorAll("#equipmentDetailPanel button").length
+    };
+    document.querySelector('.tab[data-tab="studio"]').click();
+    const furniture = document.querySelector('#office [data-office-kind="furniture"]');
+    furniture?.click();
+    const afterFurniture = {
+      studioDetailHasIcon: !!document.querySelector("#officeDetail .item-icon"),
+      selectedFurniture: document.querySelectorAll("#office .office-furniture.selected").length,
+      detailText: document.querySelector("#officeDetail")?.textContent?.slice(0, 120)
+    };
+    return { afterCard, afterFurniture };
   })()`);
 
   results.interactions.oldSaveNormalize = await evalJs(cdp, `(() => {
@@ -356,6 +380,32 @@ try {
     tabCount: document.querySelectorAll(".tab").length
   }))()`);
   await capture(cdp, join(root, "outputs", "release-mobile.png"));
+
+  await cdp.send("Emulation.setDeviceMetricsOverride", {
+    width: 430,
+    height: 932,
+    deviceScaleFactor: 1,
+    mobile: true
+  });
+  await cdp.send("Page.navigate", { url: targetUrl });
+  await waitForGameReady(cdp);
+  await sleep(350);
+  results.mobile430 = await evalJs(cdp, `(() => {
+    document.querySelector('.tab[data-tab="officePanel"]').click();
+    return {
+      width: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 2,
+      equipmentColumns: getComputedStyle(document.querySelector("#equipmentShop")).gridTemplateColumns,
+      detailBeforeShop: (() => {
+        const detail = document.querySelector("#equipmentDetailPanel")?.getBoundingClientRect();
+        const shop = document.querySelector(".equipment-shop-panel")?.getBoundingClientRect();
+        return !!detail && !!shop && detail.top < shop.top;
+      })(),
+      buttonMinHeight: Math.round(document.querySelector("#equipmentShop button")?.getBoundingClientRect().height || 0),
+      detailHasLargeIcon: !!document.querySelector("#equipmentDetailPanel .item-icon--large")
+    };
+  })()`);
 
   await evalJs(cdp, `(() => {
     if (window.__ictSmokeBackup === null) localStorage.removeItem("insuranceKaihatsuSave");

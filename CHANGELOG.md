@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.2.1 - Compact Item UI Polish
+
+### Added
+
+- Shared item detail panel for equipment cards and clickable office furniture.
+- Larger original CSS item preview in equipment and furniture detail cards.
+- Phaser selection highlight for clicked office furniture and selected shop items.
+- Smoke-test checks for item details, selected equipment cards, 390 px mobile layout and 430 px mobile layout.
+
+### Improved
+
+- Office tab now uses a compact control/shop/detail workbench instead of a long vertical shop page.
+- Equipment cards now show clearer Ready, Locked and Installed states.
+- Equipment capacity now uses compact stat chips instead of a plain text block.
+- Studio layout stays compact on tablet-width desktop windows and collapses intentionally on phones.
+- Mobile setup and status controls are more compact while keeping primary buttons at least 44 px tall.
+
+### Fixed
+
+- Decorative office objects clicked in the Studio now show their own item detail instead of falling back to a generic shop item.
+- Office furniture selection is visible in both the Phaser canvas and fallback DOM office.
+
+### Known limitations
+
+- Item previews are still procedural placeholder art rather than a commissioned sprite pack.
+
 ## 1.2.0 - Phaser Office Engine Upgrade
 
 ### Added

@@ -314,6 +314,7 @@ function freshState() {
     equipmentFilter: "All",
     uiSettings: {animations: true, compactMobile: false},
     selectedOfficeItem: null,
+    selectedEquipmentId: "basicDesk",
     officeEventLog: ["Staff arrive through the front door and settle into their desks."],
     liveOfficeEvents: [],
     currentProject: null,
@@ -369,6 +370,7 @@ function normalizeState(s) {
   merged.equipmentFilter = typeof merged.equipmentFilter === "string" ? merged.equipmentFilter : "All";
   merged.uiSettings = {...fresh.uiSettings, ...(merged.uiSettings || {})};
   merged.selectedOfficeItem = merged.selectedOfficeItem || null;
+  merged.selectedEquipmentId = typeof merged.selectedEquipmentId === "string" ? merged.selectedEquipmentId : "basicDesk";
   merged.achievements = Array.isArray(merged.achievements) ? merged.achievements : [];
   merged.trophies = Array.isArray(merged.trophies) ? merged.trophies : [];
   merged.ceoHistory = Array.isArray(merged.ceoHistory) ? merged.ceoHistory : [];
@@ -383,7 +385,7 @@ function freshStateSkeleton() {
     saveVersion:SAVE_VERSION,
     month:1, cash:START_CASH, fans:1000, reputation:5, research:20, solvency:150,
     interestRate:.04, mortalityShock:1, expenseRate:.12, office:1, staff:[], candidates:[],
-    designSettings:null, equipment:[], officeLayout:null, officeView:{zoom:1, panX:0, panY:0}, officeMotion:{}, currentTab:"studio", saveDirty:false, lastSavedAt:null, equipmentFilter:"All", uiSettings:{animations:true, compactMobile:false}, selectedOfficeItem:null, officeEventLog:[], liveOfficeEvents:[], currentProject:null, projectChoice:null, trainingSession:null, policies:[],
+    designSettings:null, equipment:[], officeLayout:null, officeView:{zoom:1, panX:0, panY:0}, officeMotion:{}, currentTab:"studio", saveDirty:false, lastSavedAt:null, equipmentFilter:"All", uiSettings:{animations:true, compactMobile:false}, selectedOfficeItem:null, selectedEquipmentId:"basicDesk", officeEventLog:[], liveOfficeEvents:[], currentProject:null, projectChoice:null, trainingSession:null, policies:[],
     products:[], awards:[], trophies:[], achievements:[], flags:{}, ceoHistory:[],
     ceoStreak:0, quiz:null, cashFlow:[], cashHist:[], leaderboard:getLeaderboard(),
     lastLaunchReport:null, yearSummary:null, newspaper:"", ticker:"", tip:choice(CEO_TIPS),
@@ -1468,6 +1470,8 @@ function buyEquipment(id) {
   if (installedSpace() + item.space > equipmentCapacity()) return toast("Not enough equipment space. Renovate the office.");
   state.cash -= item.cost;
   state.equipment.push(id);
+  state.selectedEquipmentId = id;
+  state.selectedOfficeItem = {type: "equipment", id};
   state.newspaper = `${item.name} installed in the office.`;
   toast(`${item.name} purchased.`);
   pushOfficeEvent(`${item.name} was placed on the office map.`);
@@ -1904,13 +1908,16 @@ function renderOffice(showBurstEffects = true) {
       html += `<div class="office-tile ${wall ? "wall" : path ? "path" : "floor"} ${zone}" style="${window.OfficeAnimationSystem.tileStyle(layout, x, y)}"></div>`;
     }
   }
+  const selectedFurnitureIndex = state.selectedOfficeItem?.type === "furniture" ? Number(state.selectedOfficeItem.index) : -1;
+  const selectedEquipmentId = state.selectedOfficeItem?.type === "equipment" ? state.selectedOfficeItem.id : state.selectedEquipmentId;
   layout.furniture.forEach((item, index) => {
     const def = window.FurnitureSystem.getFurniture(item.id);
     const staff = item.staffId ? state.staff.find(m => m.id === item.staffId) : null;
     const title = window.FurnitureSystem.furnitureTooltip(item, staff?.name);
     const trophies = item.id === "awardShelf" || item.id === "awardCabinet" ? renderMiniTrophies() : "";
+    const selected = index === selectedFurnitureIndex || selectedEquipmentId === item.id;
     html += `
-      <button class="office-furniture ${def.kind} ${def.className}" style="${window.OfficeAnimationSystem.tileStyle(layout, item.x, item.y, item.w, item.h)}" title="${escapeHtml(title)}" data-office-kind="furniture" data-office-index="${index}">
+      <button class="office-furniture ${def.kind} ${def.className} ${selected ? "selected" : ""}" style="${window.OfficeAnimationSystem.tileStyle(layout, item.x, item.y, item.w, item.h)}" title="${escapeHtml(title)}" data-office-kind="furniture" data-office-index="${index}">
         <span class="furniture-glyph">${escapeHtml(def.glyph)}</span>${trophies}
       </button>`;
   });
@@ -2197,7 +2204,19 @@ function selectOfficeFurniture(index) {
   const item = layout.furniture[index];
   if (!item) return;
   state.selectedOfficeItem = {type: "furniture", index, id: item.id, staffId: item.staffId || null};
+  state.selectedEquipmentId = item.id;
   renderOffice(false);
+  renderEquipmentDetail();
+}
+
+function selectEquipmentItem(id) {
+  if (!id) return;
+  state.selectedEquipmentId = id;
+  state.selectedOfficeItem = {type: "equipment", id};
+  saveToStorage();
+  renderOffice(false);
+  renderEquipment();
+  renderEquipmentDetail();
 }
 
 function renderOfficeDetail() {
@@ -2238,19 +2257,14 @@ function renderOfficeDetail() {
   const item = layout.furniture[selected.index];
   const def = item ? window.FurnitureSystem.getFurniture(item.id) : window.FurnitureSystem.getFurniture(selected.id);
   const staff = item?.staffId ? state.staff.find(m => m.id === item.staffId) : null;
-  box.innerHTML = `
-    <strong>${escapeHtml(def.name)}</strong>
-    <br>Category: ${escapeHtml(def.kind)}
-    <br>Effect: ${escapeHtml(def.effect || "Decorative office furniture.")}
-    <br>${staff ? `Assigned staff: ${escapeHtml(staff.name)}` : "Assigned staff: none"}
-    <div class="actions-row detail-actions">
-      <button data-furniture-upgrade="${escapeHtml(item?.id || selected.id)}">Upgrade / Buy Similar</button>
-    </div>`;
-  box.querySelectorAll("[data-furniture-upgrade]").forEach(btn => btn.addEventListener("click", () => {
-    const shopTab = document.querySelector('.tab[data-tab="officePanel"]');
-    if (shopTab) shopTab.click();
-    toast(`Open the equipment shop to buy or upgrade ${def.name}.`);
-  }));
+  box.innerHTML = renderItemDetailMarkup({
+    id: item?.id || selected.id,
+    def,
+    equipment: equipmentById(item?.id || selected.id),
+    staff,
+    compact: true
+  });
+  bindItemDetailActions(box);
 }
 
 function renderOfficeLog() {
@@ -2721,13 +2735,14 @@ function renderEquipment() {
   const summary = $("equipmentSummary");
   if (summary) {
     const effects = equipmentEffects();
-    summary.textContent = [
-      `Installed equipment: ${state.equipment.length}`,
-      `Space used: ${installedSpace()}/${equipmentCapacity()}`,
-      `Work speed bonus: ${Math.round(effects.workSpeed * 100)}%`,
-      `Stamina recovery bonus: ${Math.round(effects.staminaRecovery)}`,
-      `Regulatory risk reduction: ${Math.round(effects.regulatoryRisk * 100)}%`
-    ].join("\n");
+    summary.innerHTML = `
+      <div class="capacity-meter">
+        <span><b>Installed</b>${state.equipment.length}</span>
+        <span><b>Space</b>${installedSpace()}/${equipmentCapacity()}</span>
+        <span><b>Work</b>+${Math.round(effects.workSpeed * 100)}%</span>
+        <span><b>Stamina</b>+${Math.round(effects.staminaRecovery)}</span>
+        <span><b>Risk</b>-${Math.round(effects.regulatoryRisk * 100)}%</span>
+      </div>`;
   }
   renderEquipmentFilters();
   const shop = $("equipmentShop");
@@ -2738,14 +2753,18 @@ function renderEquipment() {
     const blocked = state.cash < item.cost || installedSpace() + item.space > equipmentCapacity() || state.office < item.minLevel;
     const owned = state.equipment.filter(id => id === item.id).length;
     const reason = state.office < item.minLevel ? `Locked: office Lv ${item.minLevel}` : installedSpace() + item.space > equipmentCapacity() ? "No space" : state.cash < item.cost ? "Need cash" : "";
+    const selected = state.selectedEquipmentId === item.id || state.selectedOfficeItem?.id === item.id;
+    const stateLabel = state.office < item.minLevel ? "Locked" : owned ? `Installed x${owned}` : "Ready";
+    const stateClass = state.office < item.minLevel ? "locked" : owned ? "installed" : "ready";
     return `
-      <div class="equipment-card compact-equipment-card">
+      <div class="equipment-card compact-equipment-card ${selected ? "selected" : ""}" role="button" tabindex="0" data-select-equipment="${escapeHtml(item.id)}" aria-label="Inspect ${escapeHtml(item.name)}">
         <div class="equipment-card-top">
           ${equipmentIconMarkup(item)}
           <div>
             <h3>${escapeHtml(item.name)}</h3>
             <div class="card-meta">${escapeHtml(equipmentCategory(item))} | Owned ${owned}</div>
           </div>
+          <span class="item-state ${stateClass}">${escapeHtml(stateLabel)}</span>
         </div>
         <div class="equipment-facts">
           <span>${money(item.cost)}</span>
@@ -2757,10 +2776,26 @@ function renderEquipment() {
           <summary>Details</summary>
           <p>${escapeHtml(item.effect)}</p>
         </details>
-        <button data-buy-equipment="${item.id}" ${blocked ? "disabled" : ""}>${blocked ? reason : "Buy"}</button>
+        <div class="equipment-card-actions">
+          <button type="button" data-inspect-equipment="${escapeHtml(item.id)}">Inspect</button>
+          <button type="button" data-buy-equipment="${item.id}" ${blocked ? "disabled" : ""}>${blocked ? reason : owned ? "Buy Another" : "Buy"}</button>
+        </div>
       </div>`;
   }).join("");
   shop.querySelectorAll("[data-buy-equipment]").forEach(btn => btn.addEventListener("click", () => buyEquipment(btn.dataset.buyEquipment)));
+  shop.querySelectorAll("[data-inspect-equipment]").forEach(btn => btn.addEventListener("click", () => selectEquipmentItem(btn.dataset.inspectEquipment)));
+  shop.querySelectorAll("[data-select-equipment]").forEach(card => {
+    card.addEventListener("click", event => {
+      if (event.target.closest("button, summary, details")) return;
+      selectEquipmentItem(card.dataset.selectEquipment);
+    });
+    card.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      selectEquipmentItem(card.dataset.selectEquipment);
+    });
+  });
+  renderEquipmentDetail();
 }
 
 function renderEquipmentFilters() {
@@ -2786,12 +2821,16 @@ function equipmentCategory(item) {
   return "Work";
 }
 
-function equipmentIconMarkup(item) {
-  return `<span class="item-icon ${escapeHtml(equipmentIconClass(item))}" aria-hidden="true"><i></i><b></b><em></em></span>`;
+function equipmentIconMarkup(item, extraClass = "") {
+  return `<span class="item-icon ${escapeHtml(equipmentIconClass(item))} ${escapeHtml(extraClass)}" aria-hidden="true"><i></i><b></b><em></em></span>`;
 }
 
 function equipmentIconClass(item) {
   const id = item.id || "";
+  if (/entrance|door/i.test(id)) return "item-icon--door";
+  if (/bathroom|toilet|mirror/i.test(id)) return "item-icon--bathroom";
+  if (/fridge/i.test(id)) return "item-icon--fridge";
+  if (/meetingTable|diningTable|studyTable|table/i.test(id)) return "item-icon--table";
   if (/actuarial|dataScience/i.test(id)) return "item-icon--analytics";
   if (/underwriting/i.test(id)) return "item-icon--clipboard";
   if (/marketing/i.test(id)) return "item-icon--marketing";
@@ -2799,13 +2838,13 @@ function equipmentIconClass(item) {
   if (/serviceDesk/i.test(id)) return "item-icon--service";
   if (/complianceDesk|filing/i.test(id)) return "item-icon--filing";
   if (/claimsServer/i.test(id)) return "item-icon--server";
-  if (/whiteboard/i.test(id)) return "item-icon--whiteboard";
+  if (/whiteboard|planningBoard|projector|documentStack/i.test(id)) return "item-icon--whiteboard";
   if (/coffee/i.test(id)) return "item-icon--coffee";
-  if (/kitchen/i.test(id)) return "item-icon--kitchen";
+  if (/kitchen|sink|snack/i.test(id)) return "item-icon--kitchen";
   if (/sofa/i.test(id)) return "item-icon--sofa";
-  if (/trainingLibrary/i.test(id)) return "item-icon--bookshelf";
-  if (/largePlant|plant/i.test(id)) return "item-icon--plant";
-  if (/awardShelf/i.test(id)) return "item-icon--trophy";
+  if (/trainingLibrary|bookshelf|studyLamp/i.test(id)) return "item-icon--bookshelf";
+  if (/largePlant|plant|window|rug|calendar|chartPoster|companySign|clock/i.test(id)) return "item-icon--plant";
+  if (/awardShelf|awardCabinet|trophy/i.test(id)) return "item-icon--trophy";
   return "item-icon--desk";
 }
 
@@ -2822,6 +2861,94 @@ function equipmentEffectChips(item) {
   if (e.analytics) chips.push("+Forecast");
   if (e.prestige) chips.push("+Prestige");
   return chips.length ? chips : ["Office Item"];
+}
+
+function renderEquipmentDetail() {
+  const panel = $("equipmentDetailPanel");
+  if (!panel) return;
+  const selected = state.selectedEquipmentId || state.selectedOfficeItem?.id || "basicDesk";
+  const layout = window.OfficeLayoutSystem?.buildOfficeLayout ? window.OfficeLayoutSystem.buildOfficeLayout(state) : null;
+  const selectedFurniture = state.selectedOfficeItem?.type === "furniture" && layout ? layout.furniture[Number(state.selectedOfficeItem.index)] : null;
+  const id = selectedFurniture?.id || selected;
+  const equipment = equipmentById(id) || (!selectedFurniture ? EQUIPMENT[0] : null);
+  const detailId = equipment?.id || id;
+  const def = selectedFurniture ? window.FurnitureSystem.getFurniture(selectedFurniture.id) : (window.FurnitureSystem?.getFurniture ? window.FurnitureSystem.getFurniture(detailId) : null);
+  const staff = selectedFurniture?.staffId ? state.staff.find(member => member.id === selectedFurniture.staffId) : null;
+  panel.innerHTML = renderItemDetailMarkup({ id: detailId, def, equipment, staff, compact: false });
+  bindItemDetailActions(panel);
+}
+
+function renderItemDetailMarkup({ id, def, equipment, staff, compact }) {
+  const itemId = id || equipment?.id || def?.id || "basicDesk";
+  const title = equipment?.name || def?.name || itemId;
+  const category = equipment ? equipmentCategory(equipment) : titleCase(def?.kind || "Office item");
+  const owned = equipment ? state.equipment.filter(equipmentId => equipmentId === equipment.id).length : 0;
+  const locked = equipment && state.office < equipment.minLevel;
+  const noSpace = equipment && installedSpace() + equipment.space > equipmentCapacity();
+  const noCash = equipment && state.cash < equipment.cost;
+  const canBuy = equipment && !locked && !noSpace && !noCash;
+  const stateText = locked ? `Locked until office Lv ${equipment.minLevel}` : owned ? `Installed x${owned}` : equipment ? "Ready to buy" : "Office object";
+  const chips = equipment ? equipmentEffectChips(equipment) : [def?.effect || "Office fixture"];
+  const metrics = equipment ? `
+    <span><b>Cost</b>${money(equipment.cost)}</span>
+    <span><b>Space</b>${equipment.space}</span>
+    <span><b>Office</b>Lv ${equipment.minLevel}+</span>` : `
+    <span><b>Type</b>${escapeHtml(category)}</span>
+    <span><b>Placed</b>Office map</span>
+    <span><b>Staff</b>${staff ? escapeHtml(staff.name) : "None"}</span>`;
+  const action = equipment ? `
+    <button type="button" data-detail-buy="${escapeHtml(equipment.id)}" ${canBuy ? "" : "disabled"}>${canBuy ? (owned ? "Buy Another" : "Buy Item") : locked ? "Locked" : noSpace ? "Need Space" : noCash ? "Need Cash" : "Unavailable"}</button>` : `
+    <button type="button" data-detail-open-shop="${escapeHtml(itemId)}">Open Office Shop</button>`;
+  const secondaryAction = equipment ? `<button type="button" data-detail-open-shop="${escapeHtml(itemId)}">Show in Office Shop</button>` : "";
+  return `
+    <div class="item-detail-card ${compact ? "compact" : ""}">
+      <div class="item-detail-hero">
+        ${equipmentIconMarkup({id: itemId}, "item-icon--large")}
+        <div>
+          <span class="rec-kicker">${escapeHtml(category)}</span>
+          <h3>${escapeHtml(title)}</h3>
+          <span class="item-state ${locked ? "locked" : owned ? "installed" : "ready"}">${escapeHtml(stateText)}</span>
+        </div>
+      </div>
+      <div class="item-detail-metrics">${metrics}</div>
+      <div class="effect-chip-row">${chips.map(chip => `<span>${escapeHtml(chip)}</span>`).join("")}</div>
+      <p class="item-explain">${escapeHtml(itemPlainExplanation(equipment, def))}</p>
+      <div class="item-assignment">
+        <b>Assigned staff</b>
+        <span>${staff ? escapeHtml(`${staff.name} - ${staff.role}`) : "None"}</span>
+      </div>
+      <div class="actions-row detail-actions">
+        ${action}
+        ${secondaryAction}
+      </div>
+    </div>`;
+}
+
+function bindItemDetailActions(root) {
+  root.querySelectorAll("[data-detail-buy]").forEach(btn => btn.addEventListener("click", () => buyEquipment(btn.dataset.detailBuy)));
+  root.querySelectorAll("[data-detail-open-shop]").forEach(btn => btn.addEventListener("click", () => {
+    state.selectedEquipmentId = btn.dataset.detailOpenShop || state.selectedEquipmentId;
+    const shopTab = document.querySelector('.tab[data-tab="officePanel"]');
+    if (shopTab) shopTab.click();
+    renderEquipment();
+    const selectedCard = Array.from(document.querySelectorAll("[data-select-equipment]")).find(card => card.dataset.selectEquipment === state.selectedEquipmentId);
+    selectedCard?.scrollIntoView({block: "nearest", inline: "nearest"});
+  }));
+}
+
+function itemPlainExplanation(equipment, def) {
+  const effect = equipment?.effect || def?.effect || "This item adds character to the office.";
+  const category = equipment ? equipmentCategory(equipment) : def?.kind;
+  if (category === "Rest" || def?.kind === "rest" || def?.kind === "kitchen") return `${effect} Staff use this during breaks to recover stamina and keep morale steady.`;
+  if (category === "Training" || def?.kind === "study") return `${effect} It supports staff learning and makes training feel connected to the office.`;
+  if (category === "Risk" || def?.kind === "compliance" || def?.kind === "analytics") return `${effect} It helps the company control claim, data, or regulatory risk.`;
+  if (category === "Prestige" || def?.kind === "trophy") return `${effect} It makes achievements visible and improves the headquarters feeling.`;
+  if (category === "Decoration" || def?.kind === "decor") return `${effect} It adds warmth so the office feels less empty.`;
+  return `${effect} Better work areas make staff routines clearer and improve productivity.`;
+}
+
+function titleCase(text) {
+  return String(text || "").replace(/[-_]/g, " ").replace(/\b\w/g, char => char.toUpperCase());
 }
 
 function renderStaff() {

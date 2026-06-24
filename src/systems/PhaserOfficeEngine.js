@@ -151,6 +151,12 @@
         g.strokeRoundedRect(rect.x + insetX, rect.y + insetY, bodyW, bodyH, radius);
 
         drawFurnitureArt(g, def, item, rect);
+        if (item.selected) {
+          g.lineStyle(3, 0x2f6df6, 0.95);
+          g.strokeRoundedRect(rect.x + insetX - 2, rect.y + insetY - 2, bodyW + 4, bodyH + 4, radius + 2);
+          g.fillStyle(0xfff4cb, 0.86);
+          g.fillCircle(rect.x + rect.w - Math.max(7, rect.w * 0.12), rect.y + Math.max(7, rect.h * 0.16), Math.max(4, Math.min(rect.w, rect.h) * 0.08));
+        }
         this.furnitureLayer.add(g);
 
         const zone = this.add.zone(rect.x + rect.w / 2, rect.y + rect.h / 2, Math.max(12, rect.w), Math.max(12, rect.h))
@@ -422,6 +428,8 @@
   function buildSnapshot(state, layout, options) {
     const now = Date.now();
     const selectedStaffId = state.selectedOfficeItem?.type === "staff" ? state.selectedOfficeItem.id : null;
+    const selectedFurnitureIndex = state.selectedOfficeItem?.type === "furniture" ? Number(state.selectedOfficeItem.index) : -1;
+    const selectedEquipmentId = state.selectedOfficeItem?.type === "equipment" ? state.selectedOfficeItem.id : state.selectedEquipmentId;
     const staff = (state.staff || []).map((member, index) => {
       const routine = window.StaffRoutineSystem.routineForStaff(member, index, state, layout);
       const motion = window.OfficeAnimationSystem.resolveStaffMotion(state, member, routine, layout, now);
@@ -457,7 +465,7 @@
       furniture: (layout.furniture || []).map((item, index) => {
         const def = window.FurnitureSystem?.getFurniture ? window.FurnitureSystem.getFurniture(item.id) : window.FURNITURE_DATA?.[item.id] || {};
         const staffMember = item.staffId ? state.staff.find(member => member.id === item.staffId) : null;
-        return { ...item, index, def, staffName: staffMember?.name || "" };
+        return { ...item, index, def, staffName: staffMember?.name || "", selected: index === selectedFurnitureIndex || selectedEquipmentId === item.id };
       }),
       floaters: state.floaters || [],
       confetti: state.confetti || 0,

@@ -6,6 +6,8 @@ The project is static HTML, CSS and JavaScript. It is runnable from `index.html`
 
 The animated office uses a local Phaser 3 renderer. Dense menus, tabs, product controls and save/load UI remain HTML so the game stays easy to maintain.
 
+The Office screen uses compact visual item cards and a shared item detail panel for equipment, furniture effects, assigned staff and buy actions.
+
 Published URL: https://colinjinhuizhang-design.github.io/insurance-company-tycoon/
 
 ## Run Locally
@@ -35,7 +37,7 @@ http://localhost:8000
 3. Open Lab and choose a preset if you want a safer product design.
 4. Check the launch readiness meter before starting development.
 5. Start an insurance product in Lab.
-6. Buy equipment or renovate in Office when capacity is tight.
+6. Buy equipment or renovate in Office when capacity is tight; click an item card or office object to inspect its effects.
 7. Advance months from the global control bar.
 8. Watch cash, claims, reputation, risk and solvency.
 9. Train staff, enter the Championship, and collect awards.
