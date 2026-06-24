@@ -8,6 +8,7 @@ const edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 const userDataDir = join(tmpdir(), `ict-smoke-${Date.now()}`);
 const port = 9237;
 const fileUrl = `file:///${resolve(root, "index.html").replaceAll("\\", "/")}`;
+const targetUrl = process.env.ICT_SMOKE_URL || fileUrl;
 const results = { desktop: {}, mobile: {}, interactions: {}, consoleErrors: [] };
 
 await mkdir(userDataDir, { recursive: true });
@@ -18,7 +19,7 @@ const browser = spawn(edge, [
   "--no-default-browser-check",
   `--remote-debugging-port=${port}`,
   `--user-data-dir=${userDataDir}`,
-  fileUrl
+  targetUrl
 ], { stdio: "ignore" });
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -113,14 +114,14 @@ try {
   let tabs = await fetchJson(`http://127.0.0.1:${port}/json/list`);
   let page = tabs.find(tab => tab.type === "page");
   if (!page) {
-    page = await fetchJson(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(fileUrl)}`, { method: "PUT" });
+    page = await fetchJson(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(targetUrl)}`, { method: "PUT" });
   }
   const cdp = connect(page.webSocketDebuggerUrl);
   await cdp.ready;
   await cdp.send("Runtime.enable");
   await cdp.send("Log.enable");
   await cdp.send("Page.enable");
-  await cdp.send("Page.navigate", { url: fileUrl });
+  await cdp.send("Page.navigate", { url: targetUrl });
   await sleep(900);
 
   await evalJs(cdp, `window.__ictSmokeBackup = localStorage.getItem("insuranceKaihatsuSave")`);
@@ -324,7 +325,7 @@ try {
     deviceScaleFactor: 1,
     mobile: true
   });
-  await cdp.send("Page.navigate", { url: fileUrl });
+  await cdp.send("Page.navigate", { url: targetUrl });
   await sleep(900);
   results.mobile.layout = await evalJs(cdp, `(() => ({
     width: document.documentElement.clientWidth,
@@ -344,7 +345,7 @@ try {
     else localStorage.setItem("insuranceKaihatsuSave", window.__ictSmokeBackup);
     return true;
   })()`);
-  await cdp.send("Page.navigate", { url: fileUrl });
+  await cdp.send("Page.navigate", { url: targetUrl });
   await sleep(250);
   cdp.close();
 } finally {
