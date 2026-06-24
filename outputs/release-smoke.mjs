@@ -88,6 +88,19 @@ async function evalJs(cdp, expression) {
   }));
 }
 
+async function waitForGameReady(cdp) {
+  for (let i = 0; i < 80; i++) {
+    const ready = await evalJs(cdp, `(() => document.readyState === "complete" &&
+      !!document.querySelector("#saveBtn") &&
+      !!document.querySelector("#officeEngine") &&
+      typeof saveToStorage === "function" &&
+      typeof render === "function")()`);
+    if (ready) return true;
+    await sleep(150);
+  }
+  throw new Error("Game did not become ready before smoke interactions.");
+}
+
 const enginePixelProbe = `(() => {
   const canvas = document.querySelector("#officeEngine canvas");
   if (!canvas) return { exists: false, nonBlank: false, width: 0, height: 0, uniqueColors: 0 };
@@ -122,7 +135,8 @@ try {
   await cdp.send("Log.enable");
   await cdp.send("Page.enable");
   await cdp.send("Page.navigate", { url: targetUrl });
-  await sleep(900);
+  await waitForGameReady(cdp);
+  await sleep(350);
 
   await evalJs(cdp, `window.__ictSmokeBackup = localStorage.getItem("insuranceKaihatsuSave")`);
   results.desktop.initial = await evalJs(cdp, `(() => {
@@ -326,7 +340,8 @@ try {
     mobile: true
   });
   await cdp.send("Page.navigate", { url: targetUrl });
-  await sleep(900);
+  await waitForGameReady(cdp);
+  await sleep(350);
   results.mobile.layout = await evalJs(cdp, `(() => ({
     width: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
