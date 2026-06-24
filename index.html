@@ -79,6 +79,7 @@
               <button id="officeZoomIn" type="button">Zoom In</button>
             </div>
             <div id="officeViewport" class="office-viewport">
+              <div id="officeEngine" class="office-engine" aria-label="Animated office canvas"></div>
               <div id="office" class="office-map"></div>
             </div>
             <div class="office-info-grid">
@@ -426,6 +427,7 @@ Shortcuts pause while typing or while a quiz/training modal is open.</div>
 
   <div id="toast" class="toast hidden"></div>
   <div id="achievementPop" class="achievement-pop hidden"></div>
+  <script src="vendor/phaser.min.js"></script>
   <script src="src/data/staffSprites.js"></script>
   <script src="src/data/roleVisuals.js"></script>
   <script src="src/data/furniture.js"></script>
@@ -437,6 +439,7 @@ Shortcuts pause while typing or while a quiz/training modal is open.</div>
   <script src="src/systems/MoodSystem.js"></script>
   <script src="src/systems/AvatarSystem.js"></script>
   <script src="src/systems/OfficeAnimationSystem.js"></script>
+  <script src="src/systems/PhaserOfficeEngine.js"></script>
   <script src="src/systems/ResponsiveOfficeSystem.js"></script>
   <script src="src/main.js"></script>
 </body>

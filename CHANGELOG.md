@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.2.0 - Phaser Office Engine Upgrade
+
+### Added
+
+- Local Phaser 3.90.0 browser engine file for the animated Studio office.
+- `PhaserOfficeEngine` adapter that renders the office layout, furniture, staff avatars, mood/stamina bars, speech bubbles, floating feedback and confetti on canvas.
+- Smoke-test checks for Phaser loading and engine canvas mounting.
+
+### Improved
+
+- The Studio office now uses a real 2D game rendering layer while keeping the management UI in HTML.
+- Office click interactions still open the existing staff and furniture detail panels.
+- Asset credits now document the Phaser MIT-licensed engine dependency separately from original visual assets.
+
+### Known limitations
+
+- The Phaser office uses original procedural placeholder art rather than a commissioned sprite set.
+- Gameplay rules still live in `src/main.js`; future updates should continue moving data and rules out gradually.
+
 ## 1.1.0 - Studio UI Polish
 
 ### Added

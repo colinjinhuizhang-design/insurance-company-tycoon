@@ -7,6 +7,8 @@
 - `src/main.js`: game state, balance constants, simulation, rendering, save/load and event handlers.
 - `src/data/`: furniture, office layout and staff visual data.
 - `src/systems/`: modular helpers for office layout, pathfinding, avatar rendering, mood, furniture and responsive office behavior.
+- `src/systems/PhaserOfficeEngine.js`: Phaser canvas renderer for the animated Studio office. It should read simulation state and emit clicks back to `src/main.js`; keep gameplay rules outside the Phaser scene.
+- `vendor/phaser.min.js`: local Phaser 3.90.0 engine file used by `index.html`.
 - `assets/ASSET_CREDITS.md`: legal asset record.
 
 ## Save Version
@@ -137,6 +139,8 @@ node outputs/release-smoke.mjs
 ```
 
 The smoke test opens local headless Edge, checks desktop and mobile layout, core interactions, save/load/reset, old-save normalization, product start and launch, training, equipment, renovation, Championship and console errors.
+
+The smoke test also checks that Phaser loads and that the Studio office canvas mounts. If that check fails, the DOM office remains a fallback, but the engine-backed office should be fixed before publishing a Phaser update.
 
 ## Avoid Breaking Saves
 

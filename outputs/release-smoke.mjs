@@ -87,6 +87,22 @@ async function evalJs(cdp, expression) {
   }));
 }
 
+const enginePixelProbe = `(() => {
+  const canvas = document.querySelector("#officeEngine canvas");
+  if (!canvas) return { exists: false, nonBlank: false, width: 0, height: 0, uniqueColors: 0 };
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { exists: true, nonBlank: false, width: canvas.width, height: canvas.height, uniqueColors: 0 };
+  const w = canvas.width;
+  const h = canvas.height;
+  const sample = ctx.getImageData(Math.floor(w * .2), Math.floor(h * .18), Math.max(1, Math.floor(w * .6)), Math.max(1, Math.floor(h * .58))).data;
+  const colors = new Set();
+  for (let i = 0; i < sample.length; i += 64) {
+    colors.add(\`\${sample[i]},\${sample[i + 1]},\${sample[i + 2]},\${sample[i + 3]}\`);
+    if (colors.size > 24) break;
+  }
+  return { exists: true, nonBlank: colors.size > 4, width: w, height: h, uniqueColors: colors.size };
+})()`;
+
 async function capture(cdp, path) {
   const png = await cdp.send("Page.captureScreenshot", { format: "png", fromSurface: true });
   await writeFile(path, Buffer.from(png.data, "base64"));
@@ -115,6 +131,11 @@ try {
       tabs,
       hasBoardTab: !!document.querySelector('[data-tab="board"]'),
       hasOffice: !!document.querySelector("#office"),
+      hasPhaser: !!window.Phaser,
+      hasOfficeEngineCanvas: !!document.querySelector("#officeEngine canvas"),
+      enginePixelProbe: ${enginePixelProbe},
+      officeEngineActive: document.querySelector("#officeViewport")?.classList.contains("engine-active"),
+      officeEngineStatus: window.PhaserOfficeEngine?.status?.(),
       hasRecommended: !!document.querySelector("#recommendedAction"),
       globalSolvency: document.querySelector("#globalSolvency")?.textContent,
       globalRisk: document.querySelector("#globalRisk")?.textContent,
@@ -311,6 +332,9 @@ try {
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 2,
     activePanel: document.querySelector(".panel.active")?.id,
     advanceHeight: Math.round(document.querySelector("#advanceBtn")?.getBoundingClientRect().height || 0),
+    hasOfficeEngineCanvas: !!document.querySelector("#officeEngine canvas"),
+    enginePixelProbe: ${enginePixelProbe},
+    officeEngineActive: document.querySelector("#officeViewport")?.classList.contains("engine-active"),
     tabCount: document.querySelectorAll(".tab").length
   }))()`);
   await capture(cdp, join(root, "outputs", "release-mobile.png"));

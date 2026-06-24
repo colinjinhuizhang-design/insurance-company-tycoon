@@ -4,6 +4,8 @@ An original browser-based insurance company management simulation. You run a sma
 
 The project is static HTML, CSS and JavaScript. It is runnable from `index.html`, uses `localStorage`, and is designed for GitHub Pages.
 
+The animated office uses a local Phaser 3 renderer. Dense menus, tabs, product controls and save/load UI remain HTML so the game stays easy to maintain.
+
 Published URL: https://colinjinhuizhang-design.github.io/insurance-company-tycoon/
 
 ## Run Locally
@@ -46,6 +48,9 @@ style.css               Main UI, layout, office, avatar and animation styles
 src/main.js             Core game state, simulation, rendering and event wiring
 src/data/               Office, furniture and staff visual data
 src/systems/            Office layout, animation, avatar, furniture and responsiveness helpers
+src/systems/PhaserOfficeEngine.js
+                        Phaser canvas adapter for the animated Studio office
+vendor/phaser.min.js    Local MIT-licensed Phaser 3 browser engine
 assets/ASSET_CREDITS.md Asset and legal notes
 outputs/release-smoke.mjs Local release smoke test utility
 ```
@@ -64,7 +69,7 @@ The save normalizer fills missing fields for older saves, restores obsolete tabs
 
 ## Legal Asset Note
 
-This project does not use copied commercial game assets, ripped sprites, music, maps, source code, formulas, characters, or UI layouts. Current visuals are original placeholder assets created with HTML, CSS and JavaScript for this project. See `assets/ASSET_CREDITS.md`.
+This project does not use copied commercial game assets, ripped sprites, music, maps, source code, formulas, characters, or UI layouts. Current visuals are original placeholder assets created with HTML, CSS, JavaScript and Phaser Graphics for this project. Phaser 3.90.0 is included locally under the MIT License. See `assets/ASSET_CREDITS.md`.
 
 ## GitHub Pages Deployment
 

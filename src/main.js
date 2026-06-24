@@ -1968,6 +1968,15 @@ function renderOffice(showBurstEffects = true) {
   office.innerHTML = html;
   office.querySelectorAll("[data-office-kind='staff']").forEach(btn => btn.addEventListener("click", () => selectOfficeStaff(btn.dataset.staffId)));
   office.querySelectorAll("[data-office-kind='furniture']").forEach(btn => btn.addEventListener("click", () => selectOfficeFurniture(Number(btn.dataset.officeIndex))));
+  const officeViewport = $("officeViewport");
+  const engineReady = !!(window.PhaserOfficeEngine && window.Phaser);
+  officeViewport?.classList.toggle("engine-active", engineReady);
+  const engineActive = engineReady && !!window.PhaserOfficeEngine.render(state, layout, {
+    showBurstEffects,
+    selectStaff: selectOfficeStaff,
+    selectFurniture: selectOfficeFurniture
+  });
+  officeViewport?.classList.toggle("engine-active", engineActive);
   renderOfficeDetail();
   renderOfficeLog();
   renderOfficeTeamStatus();
@@ -2283,6 +2292,8 @@ function applyOfficeView() {
   const office = $("office");
   if (!viewport || !office || !window.ResponsiveOfficeSystem) return;
   state.officeView = window.ResponsiveOfficeSystem.applyView(state.officeView, viewport, office);
+  const engine = $("officeEngine");
+  if (engine) engine.style.zoom = String(state.officeView.zoom || 1);
 }
 
 function changeOfficeZoom(delta) {

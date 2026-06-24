@@ -4,6 +4,8 @@
 
 Insurance Company Tycoon was reviewed and improved through three review-improve-test cycles. The game remains a static HTML/CSS/JavaScript browser game that opens from `index.html`, uses `localStorage`, and avoids external copyrighted assets.
 
+Post-release UI pass: the Studio office now uses a local Phaser 3 canvas renderer while the management HUD, tabs, forms and save/load UI remain HTML.
+
 ## Major improvements
 
 - Studio is the main screen.
@@ -16,6 +18,8 @@ Insurance Company Tycoon was reviewed and improved through three review-improve-
 - Claim spikes show floating warning feedback.
 - Animation toggle now reduces render cadence.
 - Release docs and update docs were added.
+- Phaser 3.90.0 is vendored locally and powers the animated office canvas.
+- The Phaser office renders original procedural staff, furniture, mood/stamina bars, bubbles and effects.
 
 ## Files created
 
@@ -28,6 +32,8 @@ Insurance Company Tycoon was reviewed and improved through three review-improve-
 - `REVIEW_CYCLE_3.md`
 - `FINAL_RELEASE_REVIEW.md`
 - `outputs/release-smoke.mjs`
+- `src/systems/PhaserOfficeEngine.js`
+- `vendor/phaser.min.js`
 
 ## Files updated
 
@@ -36,23 +42,28 @@ Insurance Company Tycoon was reviewed and improved through three review-improve-
 - `src/main.js`
 - `README.md`
 - `assets/ASSET_CREDITS.md`
+- `CHANGELOG.md`
+- `UPDATE_GUIDE.md`
 
 ## Tests completed
 
 - `node --check src/main.js`
+- `node --check src/systems/PhaserOfficeEngine.js`
+- `node --check outputs/release-smoke.mjs`
 - `node outputs/release-smoke.mjs`
 
 ## Browser testing results
 
 - Browser target: local headless Microsoft Edge using the browser debugging protocol.
 - In-app browser connector: attempted, but setup failed in this environment, so headless Edge was used as the fallback.
-- Desktop result: Studio opened first, all tabs switched, no horizontal overflow, no console errors.
+- Desktop result: Studio opened first, all tabs switched, no horizontal overflow, Phaser loaded, engine canvas mounted and rendered nonblank pixels, no console errors.
 - Console errors: none reported by the smoke test.
 
 ## Mobile testing results
 
 - Viewport: 390 x 844.
 - Result: no unexpected horizontal overflow.
+- Phaser canvas mounted and rendered nonblank pixels at 390 x 844.
 - Advance button height: 45 px.
 - Active screen after reload: Studio.
 
@@ -67,7 +78,8 @@ Insurance Company Tycoon was reviewed and improved through three review-improve-
 ## Asset/legal review
 
 - No external images, audio, fonts, sprites, maps or music are used.
-- Current visuals are original HTML/CSS/JavaScript placeholder assets.
+- Current visuals are original HTML/CSS/JavaScript/Phaser Graphics placeholder assets.
+- Phaser 3.90.0 is included as a MIT-licensed rendering framework in `vendor/phaser.min.js`.
 - `assets/ASSET_CREDITS.md` was updated.
 
 ## Git status
