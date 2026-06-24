@@ -8,7 +8,7 @@ const edge = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 const userDataDir = join(tmpdir(), `ict-smoke-${Date.now()}`);
 const port = 9237;
 const fileUrl = `file:///${resolve(root, "index.html").replaceAll("\\", "/")}`;
-const targetUrl = process.env.ICT_SMOKE_URL || fileUrl;
+const targetUrl = process.argv[2] || process.env.ICT_SMOKE_URL || fileUrl;
 const results = { desktop: {}, mobile: {}, interactions: {}, consoleErrors: [] };
 
 await mkdir(userDataDir, { recursive: true });
