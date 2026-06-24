@@ -149,6 +149,8 @@ try {
       hasPhaser: !!window.Phaser,
       hasOfficeEngineCanvas: !!document.querySelector("#officeEngine canvas"),
       enginePixelProbe: ${enginePixelProbe},
+      equipmentItemIcons: document.querySelectorAll("#equipmentShop .item-icon").length,
+      oldEquipmentTextBadges: document.querySelectorAll("#equipmentShop .equipment-icon").length,
       officeEngineActive: document.querySelector("#officeViewport")?.classList.contains("engine-active"),
       officeEngineStatus: window.PhaserOfficeEngine?.status?.(),
       hasRecommended: !!document.querySelector("#recommendedAction"),

@@ -150,30 +150,8 @@
         g.lineStyle(2, LINE, 0.72);
         g.strokeRoundedRect(rect.x + insetX, rect.y + insetY, bodyW, bodyH, radius);
 
-        if (kind === "desk") {
-          g.fillStyle(0xffffff, 0.32);
-          g.fillRect(rect.x + rect.w * 0.12, rect.y + rect.h * 0.18, rect.w * 0.76, rect.h * 0.25);
-        } else if (kind === "computer" || kind === "analytics") {
-          g.fillStyle(0x9de2d2, 1);
-          g.fillRect(rect.x + rect.w * 0.2, rect.y + rect.h * 0.22, rect.w * 0.6, rect.h * 0.38);
-          g.fillStyle(0x263044, 1);
-          g.fillRect(rect.x + rect.w * 0.42, rect.y + rect.h * 0.64, rect.w * 0.16, rect.h * 0.14);
-        } else if (kind === "decor") {
-          g.fillStyle(0x60a531, 1);
-          g.fillCircle(rect.x + rect.w * 0.5, rect.y + rect.h * 0.38, Math.min(rect.w, rect.h) * 0.22);
-        } else if (kind === "trophy") {
-          g.fillStyle(0xfff4cb, 1);
-          g.fillCircle(rect.x + rect.w * 0.5, rect.y + rect.h * 0.38, Math.min(rect.w, rect.h) * 0.18);
-          g.fillRect(rect.x + rect.w * 0.42, rect.y + rect.h * 0.52, rect.w * 0.16, rect.h * 0.2);
-        }
-
-        const glyph = this.add.text(rect.x + rect.w / 2, rect.y + rect.h / 2, def.glyph || "?", {
-          fontFamily: "Arial, sans-serif",
-          fontSize: `${Math.max(9, Math.min(15, rect.h * 0.24))}px`,
-          color: "#263044",
-          fontStyle: "bold"
-        }).setOrigin(0.5);
-        this.furnitureLayer.add([g, glyph]);
+        drawFurnitureArt(g, def, item, rect);
+        this.furnitureLayer.add(g);
 
         const zone = this.add.zone(rect.x + rect.w / 2, rect.y + rect.h / 2, Math.max(12, rect.w), Math.max(12, rect.h))
           .setInteractive({ cursor: "pointer" });
@@ -544,6 +522,328 @@
     g.strokeRoundedRect(x, y, width, height, 3);
     g.fillStyle(pct > 0.45 ? colorB : colorA, 1);
     g.fillRoundedRect(x + 1, y + 1, Math.max(2, (width - 2) * pct), height - 2, 3);
+  }
+
+  function drawFurnitureArt(g, def, item, rect) {
+    const id = item.id || "";
+    const kind = def.kind || "decor";
+    if (kind === "desk") return drawDesk(g, rect, item);
+    if (kind === "chair") return drawChair(g, rect);
+    if (kind === "computer") return drawComputer(g, rect);
+    if (kind === "analytics" || id === "claimsServer") return drawServer(g, rect);
+    if (id === "coffee") return drawCoffee(g, rect);
+    if (id === "kitchen" || id === "kitchenSink") return drawKitchen(g, rect, id);
+    if (id === "fridge") return drawFridge(g, rect);
+    if (id === "diningTable" || id === "meetingTable") return drawTable(g, rect);
+    if (id === "stool") return drawStool(g, rect);
+    if (id === "sofa") return drawSofa(g, rect);
+    if (kind === "bathroom" || id === "toiletSink" || id === "bathroomDoor" || id === "mirror") return drawBathroom(g, rect, id);
+    if (kind === "study" || id === "bookshelf" || id === "trainingLibrary" || id === "studyTable" || id === "studyLamp") return drawStudy(g, rect, id);
+    if (kind === "meeting" || id === "whiteboard" || id === "planningBoard" || id === "projector" || id === "documentStack") return drawMeeting(g, rect, id);
+    if (kind === "compliance" || id === "filing") return drawFiling(g, rect);
+    if (kind === "storage" || id === "printer") return drawPrinter(g, rect);
+    if (kind === "trophy" || id === "awardShelf" || id === "awardCabinet") return drawTrophyShelf(g, rect);
+    if (id === "window") return drawWindow(g, rect);
+    if (id === "entranceDoor") return drawDoor(g, rect);
+    if (id === "companySign") return drawSign(g, rect);
+    if (id === "wallClock") return drawClock(g, rect);
+    if (id === "calendar" || id === "chartPoster") return drawPoster(g, rect, id);
+    if (id === "rug") return drawRug(g, rect);
+    if (kind === "decor" || /plant/i.test(id)) return drawPlant(g, rect, id);
+    drawBoxIcon(g, rect);
+  }
+
+  function drawDesk(g, rect, item) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xffffff, 0.36);
+    g.fillRoundedRect(x + w * 0.12, y + h * 0.15, w * 0.76, h * 0.28, 5);
+    g.fillStyle(0x805c3b, 0.82);
+    g.fillRect(x + w * 0.15, y + h * 0.68, w * 0.08, h * 0.22);
+    g.fillRect(x + w * 0.77, y + h * 0.68, w * 0.08, h * 0.22);
+    g.fillStyle(0xfff4cb, 1);
+    g.fillRoundedRect(x + w * 0.18, y + h * 0.43, w * 0.22, h * 0.18, 3);
+    if (item.staffId) {
+      g.fillStyle(0x22a06b, 1);
+      g.fillCircle(x + w * 0.88, y + h * 0.22, Math.max(3, Math.min(w, h) * 0.08));
+    }
+  }
+
+  function drawChair(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x6f8498, 1);
+    g.fillRoundedRect(x + w * 0.28, y + h * 0.2, w * 0.44, h * 0.34, 5);
+    g.fillStyle(0x45566a, 1);
+    g.fillRoundedRect(x + w * 0.2, y + h * 0.5, w * 0.6, h * 0.22, 5);
+    g.fillRect(x + w * 0.32, y + h * 0.7, w * 0.08, h * 0.18);
+    g.fillRect(x + w * 0.6, y + h * 0.7, w * 0.08, h * 0.18);
+  }
+
+  function drawComputer(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x9de2d2, 1);
+    g.fillRoundedRect(x + w * 0.18, y + h * 0.18, w * 0.64, h * 0.42, 4);
+    g.fillStyle(0x263044, 1);
+    g.fillRect(x + w * 0.43, y + h * 0.62, w * 0.14, h * 0.12);
+    g.fillRoundedRect(x + w * 0.29, y + h * 0.76, w * 0.42, h * 0.09, 3);
+    g.fillStyle(0xffffff, 0.45);
+    g.fillRect(x + w * 0.27, y + h * 0.26, w * 0.36, h * 0.05);
+    g.fillRect(x + w * 0.27, y + h * 0.36, w * 0.22, h * 0.05);
+  }
+
+  function drawServer(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x4f6478, 1);
+    g.fillRoundedRect(x + w * 0.18, y + h * 0.18, w * 0.64, h * 0.62, 4);
+    for (let i = 0; i < 3; i++) {
+      g.fillStyle(0x9de2d2, i === 1 ? 1 : 0.72);
+      g.fillRect(x + w * 0.28, y + h * (0.28 + i * 0.15), w * 0.34, h * 0.05);
+      g.fillStyle(i % 2 ? 0xf5b333 : 0x22a06b, 1);
+      g.fillCircle(x + w * 0.68, y + h * (0.305 + i * 0.15), Math.max(2, w * 0.035));
+    }
+  }
+
+  function drawCoffee(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x263044, 1);
+    g.fillRoundedRect(x + w * 0.27, y + h * 0.15, w * 0.46, h * 0.62, 5);
+    g.fillStyle(0x9de2d2, 1);
+    g.fillRect(x + w * 0.35, y + h * 0.24, w * 0.3, h * 0.14);
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(x + w * 0.38, y + h * 0.52, w * 0.25, h * 0.2, 4);
+    g.lineStyle(2, 0xffffff, 0.9);
+    g.strokeCircle(x + w * 0.65, y + h * 0.61, Math.max(3, w * 0.07));
+  }
+
+  function drawKitchen(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xfff4cb, 1);
+    g.fillRoundedRect(x + w * 0.1, y + h * 0.18, w * 0.8, h * 0.48, 5);
+    g.fillStyle(0xffffff, 0.5);
+    g.fillRect(x + w * 0.16, y + h * 0.24, w * 0.24, h * 0.12);
+    if (id === "kitchenSink") {
+      g.fillStyle(0xc8efff, 1);
+      g.fillEllipse(x + w * 0.5, y + h * 0.47, w * 0.36, h * 0.2);
+    } else {
+      g.fillStyle(0xffbf69, 1);
+      g.fillRect(x + w * 0.47, y + h * 0.24, w * 0.3, h * 0.34);
+    }
+  }
+
+  function drawFridge(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(x + w * 0.24, y + h * 0.12, w * 0.52, h * 0.74, 5);
+    g.lineStyle(2, 0x9aa3b2, 1);
+    g.lineBetween(x + w * 0.27, y + h * 0.42, x + w * 0.73, y + h * 0.42);
+    g.lineStyle(2, LINE, 1);
+    g.lineBetween(x + w * 0.65, y + h * 0.22, x + w * 0.65, y + h * 0.35);
+    g.lineBetween(x + w * 0.65, y + h * 0.53, x + w * 0.65, y + h * 0.7);
+  }
+
+  function drawTable(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x8b6443, 1);
+    g.fillRoundedRect(x + w * 0.12, y + h * 0.28, w * 0.76, h * 0.28, 6);
+    g.fillRect(x + w * 0.2, y + h * 0.58, w * 0.08, h * 0.22);
+    g.fillRect(x + w * 0.72, y + h * 0.58, w * 0.08, h * 0.22);
+    g.fillStyle(0xffffff, 0.35);
+    g.fillEllipse(x + w * 0.5, y + h * 0.38, w * 0.18, h * 0.08);
+  }
+
+  function drawStool(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xffd166, 1);
+    g.fillEllipse(x + w * 0.5, y + h * 0.35, w * 0.5, h * 0.24);
+    g.fillStyle(0x8b6443, 1);
+    g.fillRect(x + w * 0.36, y + h * 0.47, w * 0.08, h * 0.28);
+    g.fillRect(x + w * 0.56, y + h * 0.47, w * 0.08, h * 0.28);
+  }
+
+  function drawSofa(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xf47aa5, 0.95);
+    g.fillRoundedRect(x + w * 0.12, y + h * 0.32, w * 0.76, h * 0.32, 8);
+    g.fillRoundedRect(x + w * 0.15, y + h * 0.16, w * 0.7, h * 0.25, 8);
+    g.fillStyle(0xffffff, 0.25);
+    g.fillRect(x + w * 0.48, y + h * 0.34, w * 0.04, h * 0.27);
+  }
+
+  function drawBathroom(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    if (id === "bathroomDoor") {
+      g.fillStyle(0xb57c4c, 1);
+      g.fillRoundedRect(x + w * 0.25, y + h * 0.12, w * 0.5, h * 0.76, 4);
+      g.fillStyle(0xf5b333, 1);
+      g.fillCircle(x + w * 0.65, y + h * 0.5, Math.max(2, w * 0.04));
+      return;
+    }
+    if (id === "mirror") {
+      g.fillStyle(0xc8efff, 1);
+      g.fillRoundedRect(x + w * 0.25, y + h * 0.16, w * 0.5, h * 0.5, 5);
+      g.fillStyle(0xffffff, 0.55);
+      g.fillRect(x + w * 0.34, y + h * 0.24, w * 0.16, h * 0.2);
+      return;
+    }
+    g.fillStyle(0xffffff, 1);
+    g.fillEllipse(x + w * 0.42, y + h * 0.48, w * 0.34, h * 0.3);
+    g.fillRoundedRect(x + w * 0.54, y + h * 0.25, w * 0.22, h * 0.28, 4);
+    g.fillStyle(0xc8efff, 1);
+    g.fillEllipse(x + w * 0.42, y + h * 0.48, w * 0.18, h * 0.12);
+  }
+
+  function drawStudy(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    if (id === "studyLamp") {
+      g.fillStyle(0xf5b333, 1);
+      g.fillTriangle(x + w * 0.5, y + h * 0.18, x + w * 0.24, y + h * 0.58, x + w * 0.76, y + h * 0.58);
+      g.fillStyle(0x8b6443, 1);
+      g.fillRect(x + w * 0.47, y + h * 0.58, w * 0.06, h * 0.22);
+      return;
+    }
+    if (id === "studyTable") return drawTable(g, rect);
+    g.fillStyle(0x8b6443, 1);
+    g.fillRoundedRect(x + w * 0.12, y + h * 0.14, w * 0.76, h * 0.7, 5);
+    for (let i = 0; i < 4; i++) {
+      g.fillStyle([0x2f6df6, 0xf47aa5, 0xf5b333, 0x22a06b][i], 1);
+      g.fillRect(x + w * (0.2 + i * 0.14), y + h * 0.23, w * 0.08, h * 0.5);
+    }
+  }
+
+  function drawMeeting(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    if (id === "whiteboard" || id === "planningBoard") {
+      g.fillStyle(0xffffff, 1);
+      g.fillRoundedRect(x + w * 0.1, y + h * 0.16, w * 0.8, h * 0.56, 5);
+      g.lineStyle(2, 0x2f6df6, 1);
+      g.lineBetween(x + w * 0.2, y + h * 0.55, x + w * 0.38, y + h * 0.38);
+      g.lineBetween(x + w * 0.38, y + h * 0.38, x + w * 0.55, y + h * 0.48);
+      g.lineBetween(x + w * 0.55, y + h * 0.48, x + w * 0.76, y + h * 0.28);
+      return;
+    }
+    if (id === "documentStack") {
+      g.fillStyle(0xffffff, 1);
+      g.fillRoundedRect(x + w * 0.22, y + h * 0.18, w * 0.48, h * 0.58, 3);
+      g.fillStyle(0xdce9ff, 1);
+      g.fillRoundedRect(x + w * 0.3, y + h * 0.26, w * 0.48, h * 0.58, 3);
+      return;
+    }
+    drawTable(g, rect);
+  }
+
+  function drawFiling(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xbfc5cd, 1);
+    g.fillRoundedRect(x + w * 0.2, y + h * 0.16, w * 0.6, h * 0.66, 4);
+    g.lineStyle(2, LINE, 0.8);
+    g.lineBetween(x + w * 0.24, y + h * 0.38, x + w * 0.76, y + h * 0.38);
+    g.lineBetween(x + w * 0.24, y + h * 0.58, x + w * 0.76, y + h * 0.58);
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(x + w * 0.4, y + h * 0.25, w * 0.2, h * 0.07, 3);
+  }
+
+  function drawPrinter(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x9aa3b2, 1);
+    g.fillRoundedRect(x + w * 0.18, y + h * 0.36, w * 0.64, h * 0.32, 5);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(x + w * 0.28, y + h * 0.16, w * 0.44, h * 0.24);
+    g.fillStyle(0xdce9ff, 1);
+    g.fillRect(x + w * 0.3, y + h * 0.64, w * 0.4, h * 0.16);
+  }
+
+  function drawTrophyShelf(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0x8b6443, 1);
+    g.fillRect(x + w * 0.12, y + h * 0.7, w * 0.76, h * 0.09);
+    for (let i = 0; i < 3; i++) {
+      const cx = x + w * (0.28 + i * 0.22);
+      g.fillStyle(i === 1 ? 0xfff4cb : 0xf5b333, 1);
+      g.fillCircle(cx, y + h * 0.34, Math.max(4, Math.min(w, h) * 0.11));
+      g.fillRect(cx - w * 0.035, y + h * 0.44, w * 0.07, h * 0.18);
+      g.fillRoundedRect(cx - w * 0.08, y + h * 0.62, w * 0.16, h * 0.08, 3);
+    }
+  }
+
+  function drawWindow(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xc8efff, 1);
+    g.fillRoundedRect(x + w * 0.1, y + h * 0.16, w * 0.8, h * 0.52, 4);
+    g.lineStyle(2, 0xffffff, 0.8);
+    g.lineBetween(x + w * 0.5, y + h * 0.18, x + w * 0.5, y + h * 0.66);
+    g.lineBetween(x + w * 0.12, y + h * 0.42, x + w * 0.88, y + h * 0.42);
+  }
+
+  function drawDoor(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xb57c4c, 1);
+    g.fillRoundedRect(x + w * 0.18, y + h * 0.06, w * 0.64, h * 0.84, 5);
+    g.fillStyle(0xf5b333, 1);
+    g.fillCircle(x + w * 0.68, y + h * 0.5, Math.max(3, w * 0.035));
+  }
+
+  function drawSign(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xfff4cb, 1);
+    g.fillRoundedRect(x + w * 0.12, y + h * 0.18, w * 0.76, h * 0.5, 5);
+    g.fillStyle(0x2f6df6, 1);
+    g.fillCircle(x + w * 0.32, y + h * 0.42, h * 0.12);
+    g.fillRect(x + w * 0.45, y + h * 0.34, w * 0.26, h * 0.08);
+    g.fillRect(x + w * 0.45, y + h * 0.48, w * 0.18, h * 0.08);
+  }
+
+  function drawClock(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    const r = Math.min(w, h) * 0.28;
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(x + w * 0.5, y + h * 0.46, r);
+    g.lineStyle(2, LINE, 1);
+    g.strokeCircle(x + w * 0.5, y + h * 0.46, r);
+    g.lineBetween(x + w * 0.5, y + h * 0.46, x + w * 0.5, y + h * 0.3);
+    g.lineBetween(x + w * 0.5, y + h * 0.46, x + w * 0.62, y + h * 0.52);
+  }
+
+  function drawPoster(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(x + w * 0.16, y + h * 0.14, w * 0.68, h * 0.6, 4);
+    g.fillStyle(id === "calendar" ? 0xf47aa5 : 0x2f6df6, 1);
+    g.fillRect(x + w * 0.2, y + h * 0.2, w * 0.6, h * 0.12);
+    if (id === "calendar") {
+      for (let i = 0; i < 6; i++) g.fillRect(x + w * (0.24 + (i % 3) * 0.17), y + h * (0.4 + Math.floor(i / 3) * 0.14), w * 0.08, h * 0.06);
+    } else {
+      g.lineStyle(2, 0x22a06b, 1);
+      g.lineBetween(x + w * 0.26, y + h * 0.62, x + w * 0.42, y + h * 0.45);
+      g.lineBetween(x + w * 0.42, y + h * 0.45, x + w * 0.58, y + h * 0.55);
+      g.lineBetween(x + w * 0.58, y + h * 0.55, x + w * 0.74, y + h * 0.32);
+    }
+  }
+
+  function drawRug(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xf47aa5, 0.55);
+    g.fillRoundedRect(x + w * 0.08, y + h * 0.14, w * 0.84, h * 0.62, 9);
+    g.lineStyle(2, 0xffffff, 0.55);
+    g.strokeRoundedRect(x + w * 0.18, y + h * 0.24, w * 0.64, h * 0.42, 7);
+  }
+
+  function drawPlant(g, rect, id) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    const scale = id === "largePlant" ? 1.25 : 1;
+    g.fillStyle(0x8b6443, 1);
+    g.fillRoundedRect(x + w * 0.35, y + h * 0.62, w * 0.3, h * 0.2, 4);
+    g.fillStyle(0x60a531, 1);
+    g.fillCircle(x + w * 0.5, y + h * 0.42, Math.min(w, h) * 0.16 * scale);
+    g.fillStyle(0x22a06b, 1);
+    g.fillCircle(x + w * 0.38, y + h * 0.5, Math.min(w, h) * 0.12 * scale);
+    g.fillCircle(x + w * 0.62, y + h * 0.5, Math.min(w, h) * 0.12 * scale);
+  }
+
+  function drawBoxIcon(g, rect) {
+    const x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    g.fillStyle(0xdce9ff, 1);
+    g.fillRoundedRect(x + w * 0.22, y + h * 0.24, w * 0.56, h * 0.46, 5);
+    g.lineStyle(2, LINE, 0.75);
+    g.lineBetween(x + w * 0.22, y + h * 0.36, x + w * 0.78, y + h * 0.36);
   }
 
   function drawHair(g, style, hair, y) {

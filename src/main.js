@@ -2741,7 +2741,7 @@ function renderEquipment() {
     return `
       <div class="equipment-card compact-equipment-card">
         <div class="equipment-card-top">
-          <span class="equipment-icon">${escapeHtml(equipmentIcon(item))}</span>
+          ${equipmentIconMarkup(item)}
           <div>
             <h3>${escapeHtml(item.name)}</h3>
             <div class="card-meta">${escapeHtml(equipmentCategory(item))} | Owned ${owned}</div>
@@ -2786,16 +2786,27 @@ function equipmentCategory(item) {
   return "Work";
 }
 
-function equipmentIcon(item) {
-  if (/coffee/i.test(item.name)) return "COF";
-  if (/kitchen|sofa/i.test(item.name)) return "REST";
-  if (/training|library/i.test(item.name)) return "BOOK";
-  if (/plant/i.test(item.name)) return "PLNT";
-  if (/award|shelf/i.test(item.name)) return "CUP";
-  if (/claims|filing|compliance/i.test(item.name)) return "RISK";
-  if (/whiteboard/i.test(item.name)) return "PLAN";
-  if (/data/i.test(item.name)) return "DATA";
-  return "DESK";
+function equipmentIconMarkup(item) {
+  return `<span class="item-icon ${escapeHtml(equipmentIconClass(item))}" aria-hidden="true"><i></i><b></b><em></em></span>`;
+}
+
+function equipmentIconClass(item) {
+  const id = item.id || "";
+  if (/actuarial|dataScience/i.test(id)) return "item-icon--analytics";
+  if (/underwriting/i.test(id)) return "item-icon--clipboard";
+  if (/marketing/i.test(id)) return "item-icon--marketing";
+  if (/claimsDesk/i.test(id)) return "item-icon--claims";
+  if (/serviceDesk/i.test(id)) return "item-icon--service";
+  if (/complianceDesk|filing/i.test(id)) return "item-icon--filing";
+  if (/claimsServer/i.test(id)) return "item-icon--server";
+  if (/whiteboard/i.test(id)) return "item-icon--whiteboard";
+  if (/coffee/i.test(id)) return "item-icon--coffee";
+  if (/kitchen/i.test(id)) return "item-icon--kitchen";
+  if (/sofa/i.test(id)) return "item-icon--sofa";
+  if (/trainingLibrary/i.test(id)) return "item-icon--bookshelf";
+  if (/largePlant|plant/i.test(id)) return "item-icon--plant";
+  if (/awardShelf/i.test(id)) return "item-icon--trophy";
+  return "item-icon--desk";
 }
 
 function equipmentEffectChips(item) {
