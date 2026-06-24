@@ -1,4 +1,4 @@
-# Insurance Company Tycoon
+# Insurance Company Tycoon V2
 
 An original browser-based insurance company management simulation. You run a small insurance studio, hire and train staff, design products, manage claims and solvency, renovate the office, earn awards, and compete in the CEO Insurance Knowledge Championship.
 
@@ -29,12 +29,14 @@ http://localhost:8000
 ## How To Play
 
 1. Start in Studio and review the recommended next action.
-2. Hire staff in Staff.
-3. Start an insurance product in Lab.
-4. Buy equipment or renovate in Office when capacity is tight.
-5. Advance months from the global control bar.
-6. Watch cash, claims, reputation, risk and solvency.
-7. Train staff, enter the Championship, and collect awards.
+2. Open Farm to see product ideas as crops: seeds, sprouts, blooms, harvests and storms.
+3. Use Plan Safe Product to prepare a beginner-friendly product in Lab.
+4. Hire staff in Staff.
+5. Start an insurance product in Lab.
+6. Buy equipment or renovate in Office when capacity is tight.
+7. Advance months from the global control bar.
+8. Watch cash, claims, reputation, risk and solvency.
+9. Train staff, enter the Championship, and collect awards.
 
 ## Project Structure
 
@@ -63,6 +65,8 @@ The save normalizer fills missing fields for older saves, restores obsolete tabs
 ## Legal Asset Note
 
 This project does not use copied commercial game assets, ripped sprites, music, maps, source code, formulas, characters, or UI layouts. Current visuals are original placeholder assets created with HTML, CSS and JavaScript for this project. See `assets/ASSET_CREDITS.md`.
+
+V2 used public GitHub farming-game repositories only as high-level design references for concepts like growing stages, weather pressure, automation/logistics framing and farm dashboards. No code, assets, formulas or UI were copied.
 
 ## GitHub Pages Deployment
 

@@ -363,7 +363,7 @@ function normalizeState(s) {
   merged.liveOfficeEvents = Array.isArray(merged.liveOfficeEvents) ? merged.liveOfficeEvents : [];
   merged.officeMotion = merged.officeMotion && typeof merged.officeMotion === "object" ? merged.officeMotion : {};
   merged.officeView = window.ResponsiveOfficeSystem?.normalizeView ? window.ResponsiveOfficeSystem.normalizeView(merged.officeView) : (merged.officeView || {zoom:1, panX:0, panY:0});
-  merged.currentTab = ["studio","staff","project","officePanel","finance","events","quiz","awards","settings"].includes(merged.currentTab) ? merged.currentTab : "studio";
+  merged.currentTab = ["studio","farm","staff","project","officePanel","finance","events","quiz","awards","settings"].includes(merged.currentTab) ? merged.currentTab : "studio";
   merged.saveDirty = Boolean(merged.saveDirty);
   merged.lastSavedAt = merged.lastSavedAt || null;
   merged.equipmentFilter = typeof merged.equipmentFilter === "string" ? merged.equipmentFilter : "All";
@@ -915,7 +915,9 @@ function runPolicyExperience() {
   const underwriterHelp = state.staff.filter(m => m.role === "Underwriter").length * .05;
   for (const p of state.policies) {
     if (p.active <= 0) continue;
+    const activeAtStart = p.active;
     p.monthsInforce += 1;
+    premiums += activeAtStart * monthlyPremiumForPolicy(p);
     const ageNow = p.age + Math.floor(p.monthsInforce / 12);
     const claimRiskFactor = 1 + (p.claimRisk || 40) / 100 - effects.claimShock - underwriterHelp;
     const monthlyDeathProb = clamp((qxAt(ageNow) * state.mortalityShock * claimRiskFactor) / 12, 0, 1);
@@ -1123,6 +1125,7 @@ function launchProject() {
       payment: p.annPayment * spec.factor,
       fair,
       loaded,
+      monthlyPremium: Math.max(8, loaded * (spec.annuity ? .014 : .018)),
       claimRisk: riskRating,
       regulatoryRisk,
       serviceQuality: d.serviceQuality,
@@ -1733,6 +1736,7 @@ function render() {
   syncDesignLabels();
   renderKpis();
   renderStudioDashboard();
+  renderFarmPanel();
   renderOffice();
   renderProject();
   renderHiring();
@@ -1860,6 +1864,154 @@ function renderRecommendedAction() {
       <p>${escapeHtml(rec.detail)}</p>
       ${button}
     </div>`;
+}
+
+function farmSeason() {
+  return ["Renewal Spring", "Growth Summer", "Claims Autumn", "Reserve Winter"][Math.floor((monthOfYear() - 1) / 3)];
+}
+
+function farmSoilScore() {
+  const mood = teamAverage("mood");
+  const stamina = teamAverage("stamina");
+  return clamp(Math.round(mood * .35 + stamina * .25 + state.reputation * 4 + state.solvency * .08), 0, 100);
+}
+
+function farmWeatherLabel() {
+  const risk = riskLabel();
+  if (risk === "Critical") return "Storm warning";
+  if (risk === "High") return "Heavy claim clouds";
+  if (risk === "Moderate") return "Mixed market weather";
+  return "Clear premium weather";
+}
+
+function farmPlots() {
+  const plots = [];
+  if (state.currentProject) {
+    const p = state.currentProject;
+    const stagePortion = (p.stageIndex + clamp(p.stageProgress / (p.stageTarget || 1), 0, 1)) / PIPELINE_STAGES.length;
+    const growth = clamp(Math.round(stagePortion * 100), 2, 99);
+    plots.push({
+      type: growth < 28 ? "seed" : growth < 68 ? "sprout" : "bloom",
+      title: p.name,
+      meta: phaseName(p.stageIndex),
+      value: `${growth}% grown`,
+      detail: `Risk debt ${Math.round(p.riskDebt)}`
+    });
+  }
+  state.products.slice(0, 5).forEach(product => {
+    plots.push({
+      type: product.risk > 70 ? "storm" : "harvest",
+      title: product.name,
+      meta: `${product.stars.toFixed(1)}/10 review`,
+      value: `${product.policies} policies`,
+      detail: `${money(product.projectedYearlyProfit)} projected`
+    });
+  });
+  while (plots.length < 8) {
+    plots.push({
+      type: "empty",
+      title: "Open plot",
+      meta: "Plant a product",
+      value: "Ready",
+      detail: "Use Plan Safe Product or Lab"
+    });
+  }
+  return plots.slice(0, 8);
+}
+
+function renderFarmPanel() {
+  setText("farmSeasonBadge", farmSeason());
+  const scene = $("farmScene");
+  if (scene) {
+    scene.innerHTML = farmPlots().map(plot => `
+      <button class="farm-plot ${plot.type}" type="button" data-farm-plot="${escapeHtml(plot.type)}">
+        <span class="crop-icon" aria-hidden="true"></span>
+        <strong>${escapeHtml(plot.title)}</strong>
+        <small>${escapeHtml(plot.meta)}</small>
+        <b>${escapeHtml(plot.value)}</b>
+        <em>${escapeHtml(plot.detail)}</em>
+      </button>
+    `).join("");
+  }
+  const activePolicies = state.policies.reduce((sum, p) => sum + p.active, 0);
+  const lastCash = state.cashFlow[state.cashFlow.length - 1];
+  const projectedPremiums = state.policies.reduce((sum, p) => sum + p.active * monthlyPremiumForPolicy(p), 0);
+  const soil = farmSoilScore();
+  const dashboard = $("farmDashboard");
+  if (dashboard) {
+    dashboard.innerHTML = `
+      <div class="farm-stat-grid">
+        <span><b>${farmSeason()}</b><small>Season</small></span>
+        <span><b>${soil}/100</b><small>Team soil</small></span>
+        <span><b>${activePolicies}</b><small>Policies planted</small></span>
+        <span><b>${money(projectedPremiums)}</b><small>Monthly premium crop</small></span>
+      </div>
+      <p>${escapeHtml(state.currentProject ? `${state.currentProject.name} is growing through ${phaseName(state.currentProject.stageIndex)}.` : "No product seed is planted. Plan a safe product to start a low-risk crop.")}</p>`;
+  }
+  const guide = $("farmGuide");
+  if (guide) {
+    guide.textContent = [
+      "Seed: product idea in early research.",
+      "Sprout: pricing, risk and compliance work is underway.",
+      "Bloom: launch is near.",
+      "Harvest: launched products producing premiums.",
+      "Storm: high claim or regulatory risk needs attention."
+    ].join("\n");
+  }
+  const weather = $("farmWeather");
+  if (weather) {
+    weather.textContent = [
+      `Weather: ${farmWeatherLabel()}`,
+      `Solvency: ${pct(state.solvency)}`,
+      `Risk: ${riskLabel()}`,
+      `Mortality shock: ${state.mortalityShock.toFixed(2)}`,
+      `Last month: ${lastCash ? lastCash.note : "No month advanced yet."}`
+    ].join("\n");
+  }
+  const mini = $("farmMini");
+  if (mini) {
+    mini.innerHTML = `
+      <div class="farm-mini-row">
+        <span>${escapeHtml(farmSeason())}</span>
+        <strong>${escapeHtml(farmWeatherLabel())}</strong>
+      </div>
+      <div class="farm-mini-field">${farmPlots().slice(0, 4).map(p => `<span class="${p.type}"></span>`).join("")}</div>
+      <small>${escapeHtml(state.currentProject ? "Product crop growing." : "Plant a product crop in Farm or Lab.")}</small>`;
+  }
+}
+
+function monthlyPremiumForPolicy(policy) {
+  const rate = policy.annuity ? .014 : .018;
+  return Math.max(8, Number(policy.monthlyPremium) || Number(policy.loaded || 0) * rate);
+}
+
+function planSafeFarmProduct() {
+  const values = {
+    productType: "FamilyProtection",
+    productName: "Family Shield Orchard",
+    segment: "35",
+    channel: "Online",
+    benefit: "100000",
+    annPayment: "10000",
+    loading: "0.15",
+    assumedInterest: "0.04",
+    mortalityMargin: "0.12",
+    marketingBudget: "30000",
+    underwritingStrictness: "60",
+    serviceQuality: "58",
+    complianceDepth: "58",
+    productComplexity: "35"
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const el = $(id);
+    if (el) el.value = value;
+  });
+  state.designSettings = getInputs();
+  markUnsaved();
+  syncDesignLabels();
+  renderProject();
+  switchTab("project");
+  toast("Safe product seed prepared in the Lab.");
 }
 
 function activeAlerts() {
@@ -2964,6 +3116,9 @@ function initEvents() {
   $("officeZoomOut").addEventListener("click", () => changeOfficeZoom(-.1));
   $("officeZoomReset").addEventListener("click", resetOfficeView);
   $("officeZoomIn").addEventListener("click", () => changeOfficeZoom(.1));
+  $("farmPlanSafeBtn").addEventListener("click", planSafeFarmProduct);
+  $("farmAdvanceBtn").addEventListener("click", advanceMonth);
+  $("farmRestBtn").addEventListener("click", restAll);
   $("startProjectBtn").addEventListener("click", startProject);
   $("refreshCandidatesBtn").addEventListener("click", refreshCandidates);
   $("upgradeBtn").addEventListener("click", upgradeOffice);

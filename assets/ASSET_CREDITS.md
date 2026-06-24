@@ -6,6 +6,8 @@ No external image, audio, font, sprite, map, music or sound-effect assets are cu
 
 All staff sprites, office furniture, plants, trophy shelf, UI cards, animation effects, floating text and confetti are original placeholder visuals implemented inside this project.
 
+V2 farm visuals, plot icons, crop stages and weather indicators are original CSS-only placeholder visuals created for this project. Public farming-game repositories were reviewed only for high-level genre ideas; no external visual or code assets were imported.
+
 | Asset name | Source website | Creator | Licence | Commercial use allowed | Attribution required | Original download page | File path |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | CSS staff and office placeholder art | Local project | Codex-generated original placeholder art | Project-owned original placeholder | Yes | No | N/A | `style.css`, `index.html`, `src/data/staffSprites.js`, `src/data/furniture.js`, `src/data/officeLayouts.js` |
