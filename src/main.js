@@ -9,7 +9,81 @@ const MAX_YEARS = 30;
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SAVE_KEY = "insuranceKaihatsuSave";
 const BOARD_KEY = "insuranceKaihatsuLeaderboard";
+const TUTORIAL_KEY = "insuranceKaihatsuTutorialSeen";
 const SAVE_VERSION = 1;
+
+const TUTORIAL_STEPS = [
+  {
+    tab: "studio",
+    target: ".topbar",
+    icon: "HQ",
+    eyebrow: "Welcome, CEO",
+    title: "Build a resilient insurer",
+    body: "Grow a tiny insurance company into a trusted market leader. You will design products, support your team, handle claims and protect the company’s solvency.",
+    tip: "Nothing moves until you advance the month, so you always have time to plan.",
+    nextLabel: "Show me the controls"
+  },
+  {
+    tab: "studio",
+    target: "#gameControlBar",
+    icon: "$",
+    eyebrow: "Your control room",
+    title: "Watch cash, solvency and risk",
+    body: "This bar stays with you everywhere. Cash pays salaries and projects, solvency measures financial strength, and risk warns when the company is under pressure. Advance moves the simulation one month.",
+    tip: "Auto 12 is useful later. For your first product, advance one month at a time.",
+    nextLabel: "What should I do first?"
+  },
+  {
+    tab: "studio",
+    target: "#recommendedAction",
+    icon: "GO",
+    eyebrow: "A clear next move",
+    title: "Follow the Studio recommendation",
+    body: "The Studio reads your current run and suggests the most useful next action. At the start, your Actuary and Underwriter are already strong enough to design a simple product.",
+    tip: "Come back here whenever you are unsure what to do next.",
+    nextLabel: "Open the Product Lab"
+  },
+  {
+    tab: "project",
+    target: "#project .preset-row",
+    icon: "LAB",
+    eyebrow: "Design before you spend",
+    title: "Start with the Safe Starter",
+    body: "Presets give you a sensible baseline. Choose Safe Starter, then review the live forecast and launch-readiness advice before starting development.",
+    tip: "High prices can improve margin but reduce sales. Strong underwriting and compliance lower risk.",
+    nextLabel: "Meet the team"
+  },
+  {
+    tab: "staff",
+    target: "#staff .pixel-card:first-child",
+    icon: "TEAM",
+    eyebrow: "People power the pipeline",
+    title: "Hire for the skill you are missing",
+    body: "Staff skills change product speed, pricing, claims and compliance. Mood and stamina matter too. Your first office has one open staff seat, so choose the third hire carefully.",
+    tip: "Training can strengthen the people you already have without adding another monthly salary.",
+    nextLabel: "Tour the Office"
+  },
+  {
+    tab: "officePanel",
+    target: "#officePanel .office-workbench",
+    icon: "ITEM",
+    eyebrow: "Build a better workplace",
+    title: "Compare items before you buy",
+    body: "Use the item views, category filters and detail panel to compare exact bonuses. Your starting office is already at 4/4 equipment space, so renovate before adding another item.",
+    tip: "Inspecting is free. Effect chips show whether an item improves work, stamina, mood, training or risk control.",
+    nextLabel: "Learn the monthly loop"
+  },
+  {
+    tab: "studio",
+    target: "#gameControlBar",
+    icon: "PLAY",
+    eyebrow: "You are ready",
+    title: "Plan, advance, review, repeat",
+    body: "Start a product, advance one month, review progress and respond to decisions. Launched policies earn premiums but can also create claims, so keep cash and solvency healthy as you grow.",
+    tip: "The game saves after major actions. You can replay this tutorial from the header or Settings.",
+    nextLabel: "Start my company"
+  }
+];
 
 const OFFICE_LEVELS = [
   {level:1, name:"Small Room", cost:0, maxStaff:3, equipmentSpace:4, unlock:"Basic candidates and compact office."},
@@ -286,7 +360,14 @@ const qx = [
   0.308316,0.331444,0.354809,0.378192,0.401359,0.424064,0.446056,0.467092,0.486945,0.505382
 ];
 
-let state = normalizeState(loadFromStorage() || freshState());
+const initialSavedState = loadFromStorage();
+const shouldAutoStartTutorial = !initialSavedState && localStorage.getItem(TUTORIAL_KEY) !== "complete";
+let state = normalizeState(initialSavedState || freshState());
+let equipmentView = "all";
+let equipmentSort = "recommended";
+let tutorialStepIndex = 0;
+let tutorialReturnTab = "studio";
+let tutorialPreviousFocus = null;
 
 function freshState() {
   return {
@@ -1677,9 +1758,12 @@ function loadFromStorage() {
 function resetGame() {
   if (!confirm("Reset the current run?")) return;
   localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(TUTORIAL_KEY);
   state = freshState();
   saveToStorage();
   render();
+  restoreCurrentTab();
+  setTimeout(() => startTutorial(), 120);
 }
 
 function markUnsaved() {
@@ -1734,11 +1818,139 @@ function switchTab(tabId, persist = true) {
   state.currentTab = tabId;
   if (tabId === "finance") drawCashChart();
   if (persist) saveToStorage();
+  if (tutorialIsActive()) requestAnimationFrame(refreshTutorialTarget);
+  if (persist && !tutorialIsActive() && window.matchMedia?.("(max-width: 720px)")?.matches) {
+    requestAnimationFrame(() => {
+      const stickyOffset = ($("gameControlBar")?.offsetHeight || 0) + 12;
+      const top = Math.max(0, window.scrollY + panel.getBoundingClientRect().top - stickyOffset);
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || state.uiSettings?.animations === false;
+      window.scrollTo({top, behavior: reduceMotion ? "auto" : "smooth"});
+    });
+  }
   return true;
 }
 
 function restoreCurrentTab() {
   if (!switchTab(state.currentTab || "studio", false)) switchTab("studio", false);
+}
+
+function tutorialIsActive() {
+  return !$("tutorialOverlay")?.classList.contains("hidden");
+}
+
+function startTutorial() {
+  tutorialReturnTab = state.currentTab || "studio";
+  tutorialPreviousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  tutorialStepIndex = 0;
+  const app = document.querySelector(".app-shell");
+  if (app) {
+    app.inert = true;
+    app.setAttribute("aria-hidden", "true");
+  }
+  document.body.classList.add("tutorial-active");
+  $("tutorialOverlay")?.classList.remove("hidden");
+  showTutorialStep(0, true);
+}
+
+function showTutorialStep(index, focusCard = false) {
+  tutorialStepIndex = clamp(index, 0, TUTORIAL_STEPS.length - 1);
+  const step = TUTORIAL_STEPS[tutorialStepIndex];
+  if (!step) return;
+  if (state.currentTab !== step.tab) switchTab(step.tab, false);
+  setText("tutorialStepLabel", `Step ${tutorialStepIndex + 1} of ${TUTORIAL_STEPS.length}`);
+  setText("tutorialIcon", step.icon);
+  setText("tutorialEyebrow", step.eyebrow);
+  setText("tutorialTitle", step.title);
+  setText("tutorialBody", step.body);
+  setText("tutorialTip", step.tip);
+  const fill = $("tutorialProgressFill");
+  if (fill) fill.style.width = `${((tutorialStepIndex + 1) / TUTORIAL_STEPS.length) * 100}%`;
+  const progress = document.querySelector(".tutorial-progress-track");
+  if (progress) progress.setAttribute("aria-valuenow", String(tutorialStepIndex + 1));
+  const back = $("tutorialBackBtn");
+  if (back) back.disabled = tutorialStepIndex === 0;
+  const next = $("tutorialNextBtn");
+  if (next) next.textContent = step.nextLabel || (tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Finish" : "Next");
+  requestAnimationFrame(() => {
+    refreshTutorialTarget();
+    if (focusCard) $("tutorialCard")?.focus({preventScroll: true});
+    else next?.focus({preventScroll: true});
+  });
+}
+
+function refreshTutorialTarget() {
+  document.querySelectorAll(".tutorial-focus").forEach(node => node.classList.remove("tutorial-focus"));
+  if (!tutorialIsActive()) return;
+  const step = TUTORIAL_STEPS[tutorialStepIndex];
+  const target = step ? document.querySelector(step.target) : null;
+  if (!target) return;
+  target.classList.add("tutorial-focus");
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || state.uiSettings?.animations === false;
+  target.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block: "center", inline: "nearest"});
+}
+
+function nextTutorialStep() {
+  if (tutorialStepIndex >= TUTORIAL_STEPS.length - 1) {
+    closeTutorial(true, "Tutorial complete. Your Studio is ready.");
+    return;
+  }
+  showTutorialStep(tutorialStepIndex + 1);
+}
+
+function previousTutorialStep() {
+  if (tutorialStepIndex <= 0) return;
+  showTutorialStep(tutorialStepIndex - 1);
+}
+
+function closeTutorial(remember = true, message = "") {
+  if (remember) localStorage.setItem(TUTORIAL_KEY, "complete");
+  document.querySelectorAll(".tutorial-focus").forEach(node => node.classList.remove("tutorial-focus"));
+  document.body.classList.remove("tutorial-active");
+  $("tutorialOverlay")?.classList.add("hidden");
+  const app = document.querySelector(".app-shell");
+  if (app) {
+    app.inert = false;
+    app.removeAttribute("aria-hidden");
+  }
+  if (tutorialReturnTab) switchTab(tutorialReturnTab, false);
+  const fallback = $("tutorialBtn");
+  const focusTarget = tutorialPreviousFocus?.isConnected ? tutorialPreviousFocus : fallback;
+  focusTarget?.focus?.({preventScroll: true});
+  if (message) toast(message);
+}
+
+function handleTutorialKeydown(event) {
+  if (!tutorialIsActive()) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeTutorial(true, "Tutorial skipped. Replay it any time from How to play.");
+    return;
+  }
+  if (event.key === "ArrowRight") {
+    event.preventDefault();
+    nextTutorialStep();
+    return;
+  }
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    previousTutorialStep();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const controls = Array.from($("tutorialCard")?.querySelectorAll("button:not(:disabled)") || []);
+  if (!controls.length) return;
+  const first = controls[0];
+  const last = controls[controls.length - 1];
+  if (!controls.includes(document.activeElement)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  } else if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 function render() {
@@ -1758,6 +1970,7 @@ function render() {
   renderQuiz();
   renderSettings();
   renderLeaderboard();
+  if (tutorialIsActive()) requestAnimationFrame(refreshTutorialTarget);
 }
 
 function syncDesignLabels() {
@@ -2209,7 +2422,7 @@ function selectOfficeFurniture(index) {
   renderEquipmentDetail();
 }
 
-function selectEquipmentItem(id) {
+function selectEquipmentItem(id, moveFocus = false) {
   if (!id) return;
   state.selectedEquipmentId = id;
   state.selectedOfficeItem = {type: "equipment", id};
@@ -2217,6 +2430,14 @@ function selectEquipmentItem(id) {
   renderOffice(false);
   renderEquipment();
   renderEquipmentDetail();
+  requestAnimationFrame(() => {
+    const panel = $("equipmentDetailPanel");
+    if (!panel) return;
+    const onMobile = window.matchMedia?.("(max-width: 720px)")?.matches;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches || state.uiSettings?.animations === false;
+    if (onMobile) panel.scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block: "start"});
+    if (moveFocus) panel.querySelector("[data-item-detail-title]")?.focus({preventScroll: true});
+  });
 }
 
 function renderOfficeDetail() {
@@ -2731,71 +2952,199 @@ function renderRenovation() {
   }
 }
 
+function equipmentAvailability(item) {
+  const owned = state.equipment.filter(id => id === item.id).length;
+  const locked = state.office < item.minLevel;
+  const noSpace = installedSpace() + item.space > equipmentCapacity();
+  const noCash = state.cash < item.cost;
+  const canBuy = !locked && !noSpace && !noCash;
+  const afterCash = state.cash - item.cost;
+  const afterUsedSpace = installedSpace() + item.space;
+  let stateClass = "ready";
+  let stateLabel = "Ready";
+  let reason = `${equipmentCapacity() - afterUsedSpace} space remains after purchase.`;
+  let actionLabel = owned ? "Buy another" : "Buy item";
+  if (locked) {
+    stateClass = "locked";
+    stateLabel = `Office Lv ${item.minLevel}`;
+    reason = `Renovate to office level ${item.minLevel} to unlock this item.`;
+    actionLabel = `Unlock at Lv ${item.minLevel}`;
+  } else if (noSpace) {
+    stateClass = owned ? "installed" : "constrained";
+    stateLabel = owned ? `Installed x${owned}` : "No space";
+    reason = `Needs ${item.space} space; only ${Math.max(0, equipmentCapacity() - installedSpace())} is free. Renovate the office first.`;
+    actionLabel = "Need space";
+  } else if (noCash) {
+    stateClass = owned ? "installed" : "constrained";
+    stateLabel = owned ? `Installed x${owned}` : "Need cash";
+    reason = `Earn ${money(item.cost - state.cash)} more cash to buy this item.`;
+    actionLabel = `Need ${money(item.cost - state.cash)}`;
+  } else if (owned) {
+    stateClass = "installed";
+    stateLabel = `Installed x${owned}`;
+  }
+  return {owned, locked, noSpace, noCash, canBuy, afterCash, afterUsedSpace, stateClass, stateLabel, reason, actionLabel};
+}
+
+function recommendedEquipmentId() {
+  const priority = ["coffee", "whiteboard", "complianceDesk", "sofa", "actuarialDesk", "underwritingDesk", "dataScienceDesk", "trainingLibrary", "filing", "claimsServer"];
+  const available = EQUIPMENT.filter(item => equipmentAvailability(item).canBuy);
+  const firstNewPriority = priority.find(id => available.some(item => item.id === id && equipmentAvailability(item).owned === 0));
+  if (firstNewPriority) return firstNewPriority;
+  const firstNew = available.filter(item => equipmentAvailability(item).owned === 0).sort((a, b) => a.cost - b.cost)[0];
+  return firstNew?.id || available.sort((a, b) => a.cost - b.cost)[0]?.id || null;
+}
+
+function equipmentSortRank(item, recommendedId) {
+  const availability = equipmentAvailability(item);
+  if (item.id === recommendedId) return -2;
+  if (availability.canBuy && !availability.owned) return -1;
+  if (availability.canBuy) return 0;
+  if (availability.owned) return 1;
+  if (availability.noCash) return 2;
+  if (availability.noSpace) return 3;
+  return 4;
+}
+
 function renderEquipment() {
   const summary = $("equipmentSummary");
+  const usedSpace = installedSpace();
+  const capacity = equipmentCapacity();
+  const freeSpace = Math.max(0, capacity - usedSpace);
+  const next = nextOfficeConfig();
   if (summary) {
     const effects = equipmentEffects();
+    const full = freeSpace === 0;
+    const almostFull = !full && freeSpace <= 2;
     summary.innerHTML = `
+      <div class="capacity-overview ${full ? "full" : almostFull ? "warning" : ""}">
+        <div class="capacity-heading">
+          <span>Equipment space</span>
+          <strong>${usedSpace}/${capacity}</strong>
+        </div>
+        <div class="capacity-track" role="progressbar" aria-label="Equipment space used" aria-valuemin="0" aria-valuemax="${capacity}" aria-valuenow="${Math.min(usedSpace, capacity)}">
+          <span style="width:${clamp(usedSpace / capacity * 100, 0, 100)}%"></span>
+        </div>
+        <p>${full ? "Your office is full. Renovate before buying another item." : `${freeSpace} space available for new equipment.`}</p>
+        ${next ? `<button type="button" class="${full ? "primary" : "ghost"}" data-shop-renovate ${state.cash < next.cost ? "disabled" : ""}>Renovate to Lv ${next.level} · ${money(next.cost)}</button>` : ""}
+      </div>
       <div class="capacity-meter">
-        <span><b>Installed</b>${state.equipment.length}</span>
-        <span><b>Space</b>${installedSpace()}/${equipmentCapacity()}</span>
+        <span><b>Items</b>${state.equipment.length}</span>
         <span><b>Work</b>+${Math.round(effects.workSpeed * 100)}%</span>
         <span><b>Stamina</b>+${Math.round(effects.staminaRecovery)}</span>
         <span><b>Risk</b>-${Math.round(effects.regulatoryRisk * 100)}%</span>
       </div>`;
+    summary.querySelector("[data-shop-renovate]")?.addEventListener("click", upgradeOffice);
   }
+  renderEquipmentViews();
   renderEquipmentFilters();
   const shop = $("equipmentShop");
   if (!shop) return;
   const filter = state.equipmentFilter || "All";
-  const visible = filter === "All" ? EQUIPMENT : EQUIPMENT.filter(item => equipmentCategory(item) === filter);
+  const recommendedId = recommendedEquipmentId();
+  let visible = EQUIPMENT.filter(item => filter === "All" || equipmentCategory(item) === filter);
+  if (equipmentView === "installed") visible = visible.filter(item => equipmentAvailability(item).owned > 0);
+  if (equipmentView === "affordable") visible = visible.filter(item => equipmentAvailability(item).canBuy);
+  visible = [...visible].sort((a, b) => {
+    if (equipmentSort === "price-low") return a.cost - b.cost;
+    if (equipmentSort === "price-high") return b.cost - a.cost;
+    if (equipmentSort === "space") return a.space - b.space || a.cost - b.cost;
+    return equipmentSortRank(a, recommendedId) - equipmentSortRank(b, recommendedId) || a.cost - b.cost;
+  });
+  const sort = $("equipmentSort");
+  if (sort && sort.value !== equipmentSort) sort.value = equipmentSort;
+  const meta = $("equipmentShopMeta");
+  if (meta) {
+    const viewText = equipmentView === "installed" ? "installed items" : equipmentView === "affordable" ? "items you can buy now" : "shop items";
+    meta.textContent = `Showing ${visible.length} ${viewText}${filter === "All" ? "" : ` in ${filter}`} · ${state.equipment.length} total installed`;
+  }
+  if (!visible.length) {
+    const message = equipmentView === "affordable" && freeSpace === 0
+      ? "No item fits because your office is full. Renovate to create more space."
+      : equipmentView === "installed"
+        ? "You do not have an installed item in this category yet."
+        : "No items match this view.";
+    shop.innerHTML = `
+      <div class="equipment-empty">
+        <span class="tutorial-icon" aria-hidden="true">ITEM</span>
+        <h3>No items to show</h3>
+        <p>${escapeHtml(message)}</p>
+        <button type="button" data-reset-equipment-view>Show all equipment</button>
+      </div>`;
+    shop.querySelector("[data-reset-equipment-view]")?.addEventListener("click", () => {
+      equipmentView = "all";
+      state.equipmentFilter = "All";
+      renderEquipment();
+    });
+    renderEquipmentDetail();
+    return;
+  }
   shop.innerHTML = visible.map(item => {
-    const blocked = state.cash < item.cost || installedSpace() + item.space > equipmentCapacity() || state.office < item.minLevel;
-    const owned = state.equipment.filter(id => id === item.id).length;
-    const reason = state.office < item.minLevel ? `Locked: office Lv ${item.minLevel}` : installedSpace() + item.space > equipmentCapacity() ? "No space" : state.cash < item.cost ? "Need cash" : "";
+    const availability = equipmentAvailability(item);
     const selected = state.selectedEquipmentId === item.id || state.selectedOfficeItem?.id === item.id;
-    const stateLabel = state.office < item.minLevel ? "Locked" : owned ? `Installed x${owned}` : "Ready";
-    const stateClass = state.office < item.minLevel ? "locked" : owned ? "installed" : "ready";
+    const suggested = recommendedId === item.id;
+    const titleId = `equipment-${item.id}-title`;
+    const noteId = `equipment-${item.id}-availability`;
     return `
-      <div class="equipment-card compact-equipment-card ${selected ? "selected" : ""}" role="button" tabindex="0" data-select-equipment="${escapeHtml(item.id)}" aria-label="Inspect ${escapeHtml(item.name)}">
+      <article class="equipment-card compact-equipment-card ${selected ? "selected" : ""}" data-select-equipment="${escapeHtml(item.id)}" aria-labelledby="${titleId}" ${selected ? 'aria-current="true"' : ""}>
         <div class="equipment-card-top">
           ${equipmentIconMarkup(item)}
           <div>
-            <h3>${escapeHtml(item.name)}</h3>
-            <div class="card-meta">${escapeHtml(equipmentCategory(item))} | Owned ${owned}</div>
+            ${suggested ? '<span class="shop-pick">Suggested next</span>' : ""}
+            <h3 id="${titleId}">${escapeHtml(item.name)}</h3>
+            <div class="card-meta">${escapeHtml(equipmentCategory(item))} · Owned ${availability.owned}</div>
           </div>
-          <span class="item-state ${stateClass}">${escapeHtml(stateLabel)}</span>
+          <span class="item-state ${availability.stateClass}">${escapeHtml(availability.stateLabel)}</span>
         </div>
-        <div class="equipment-facts">
+        <div class="equipment-facts" aria-label="Item requirements">
           <span>${money(item.cost)}</span>
           <span>Space ${item.space}</span>
           <span>Lv ${item.minLevel}+</span>
         </div>
         <div class="effect-chip-row">${equipmentEffectChips(item).map(chip => `<span>${escapeHtml(chip)}</span>`).join("")}</div>
-        <details>
-          <summary>Details</summary>
-          <p>${escapeHtml(item.effect)}</p>
-        </details>
+        <p class="equipment-effect-summary">${escapeHtml(item.effect)}</p>
+        <p id="${noteId}" class="equipment-availability ${availability.canBuy ? "available" : "blocked"}">${escapeHtml(availability.reason)}</p>
         <div class="equipment-card-actions">
-          <button type="button" data-inspect-equipment="${escapeHtml(item.id)}">Inspect</button>
-          <button type="button" data-buy-equipment="${item.id}" ${blocked ? "disabled" : ""}>${blocked ? reason : owned ? "Buy Another" : "Buy"}</button>
+          <button class="ghost" type="button" data-inspect-equipment="${escapeHtml(item.id)}" aria-label="Compare ${escapeHtml(item.name)}">Compare</button>
+          <button class="${availability.canBuy ? "success" : ""}" type="button" data-buy-equipment="${escapeHtml(item.id)}" data-block-reason="${escapeHtml(availability.reason)}" aria-disabled="${availability.canBuy ? "false" : "true"}" aria-describedby="${noteId}">${escapeHtml(availability.actionLabel)}</button>
         </div>
-      </div>`;
+      </article>`;
   }).join("");
-  shop.querySelectorAll("[data-buy-equipment]").forEach(btn => btn.addEventListener("click", () => buyEquipment(btn.dataset.buyEquipment)));
-  shop.querySelectorAll("[data-inspect-equipment]").forEach(btn => btn.addEventListener("click", () => selectEquipmentItem(btn.dataset.inspectEquipment)));
+  shop.querySelectorAll("[data-buy-equipment]").forEach(btn => btn.addEventListener("click", () => {
+    if (btn.getAttribute("aria-disabled") === "true") {
+      toast(btn.dataset.blockReason || "This item is not available yet.");
+      return;
+    }
+    buyEquipment(btn.dataset.buyEquipment);
+  }));
+  shop.querySelectorAll("[data-inspect-equipment]").forEach(btn => btn.addEventListener("click", () => selectEquipmentItem(btn.dataset.inspectEquipment, true)));
   shop.querySelectorAll("[data-select-equipment]").forEach(card => {
     card.addEventListener("click", event => {
-      if (event.target.closest("button, summary, details")) return;
-      selectEquipmentItem(card.dataset.selectEquipment);
-    });
-    card.addEventListener("keydown", event => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      selectEquipmentItem(card.dataset.selectEquipment);
+      if (event.target.closest("button")) return;
+      selectEquipmentItem(card.dataset.selectEquipment, false);
     });
   });
   renderEquipmentDetail();
+}
+
+function renderEquipmentViews() {
+  const views = $("equipmentViews");
+  if (!views) return;
+  const installedCount = new Set(state.equipment).size;
+  const affordableCount = EQUIPMENT.filter(item => equipmentAvailability(item).canBuy).length;
+  const options = [
+    {id: "all", label: "All", count: EQUIPMENT.length},
+    {id: "installed", label: "Installed", count: installedCount},
+    {id: "affordable", label: "Affordable", count: affordableCount}
+  ];
+  views.innerHTML = options.map(option => `
+    <button type="button" class="${equipmentView === option.id ? "active" : ""}" data-equipment-view="${option.id}" aria-pressed="${equipmentView === option.id}">
+      ${option.label}<span>${option.count}</span>
+    </button>`).join("");
+  views.querySelectorAll("[data-equipment-view]").forEach(btn => btn.addEventListener("click", () => {
+    equipmentView = btn.dataset.equipmentView;
+    renderEquipment();
+  }));
 }
 
 function renderEquipmentFilters() {
@@ -2803,7 +3152,10 @@ function renderEquipmentFilters() {
   if (!filters) return;
   const cats = ["All", ...Array.from(new Set(EQUIPMENT.map(equipmentCategory)))];
   if (!cats.includes(state.equipmentFilter)) state.equipmentFilter = "All";
-  filters.innerHTML = cats.map(cat => `<button type="button" class="${state.equipmentFilter === cat ? "active" : ""}" data-equipment-filter="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`).join("");
+  filters.innerHTML = cats.map(cat => {
+    const count = cat === "All" ? EQUIPMENT.length : EQUIPMENT.filter(item => equipmentCategory(item) === cat).length;
+    return `<button type="button" class="${state.equipmentFilter === cat ? "active" : ""}" data-equipment-filter="${escapeHtml(cat)}" aria-pressed="${state.equipmentFilter === cat}">${escapeHtml(cat)}<span>${count}</span></button>`;
+  }).join("");
   filters.querySelectorAll("[data-equipment-filter]").forEach(btn => btn.addEventListener("click", () => {
     state.equipmentFilter = btn.dataset.equipmentFilter;
     saveToStorage();
@@ -2855,11 +3207,11 @@ function equipmentEffectChips(item) {
   if (e.pricingSpeed) chips.push(`+${Math.round(e.pricingSpeed * 100)}% Pricing`);
   if (e.staminaRecovery) chips.push(`+${Math.round(e.staminaRecovery)} Stamina`);
   if (e.mood) chips.push(`+${Math.round(e.mood)} Mood`);
-  if (e.trainingBonus) chips.push("+Training XP");
+  if (e.trainingBonus) chips.push(`+${Math.round(e.trainingBonus)} Training`);
   if (e.claimShock) chips.push(`-${Math.round(e.claimShock * 100)}% Claims`);
   if (e.regulatoryRisk) chips.push(`-${Math.round(e.regulatoryRisk * 100)}% Regulation`);
-  if (e.analytics) chips.push("+Forecast");
-  if (e.prestige) chips.push("+Prestige");
+  if (e.analytics) chips.push(`+${Math.round(e.analytics * 100)}% Forecast`);
+  if (e.prestige) chips.push(`+${Math.round(e.prestige * 100)}% Prestige`);
   return chips.length ? chips : ["Office Item"];
 }
 
@@ -2882,12 +3234,8 @@ function renderItemDetailMarkup({ id, def, equipment, staff, compact }) {
   const itemId = id || equipment?.id || def?.id || "basicDesk";
   const title = equipment?.name || def?.name || itemId;
   const category = equipment ? equipmentCategory(equipment) : titleCase(def?.kind || "Office item");
-  const owned = equipment ? state.equipment.filter(equipmentId => equipmentId === equipment.id).length : 0;
-  const locked = equipment && state.office < equipment.minLevel;
-  const noSpace = equipment && installedSpace() + equipment.space > equipmentCapacity();
-  const noCash = equipment && state.cash < equipment.cost;
-  const canBuy = equipment && !locked && !noSpace && !noCash;
-  const stateText = locked ? `Locked until office Lv ${equipment.minLevel}` : owned ? `Installed x${owned}` : equipment ? "Ready to buy" : "Office object";
+  const availability = equipment ? equipmentAvailability(equipment) : null;
+  const stateText = availability?.stateLabel || "Office object";
   const chips = equipment ? equipmentEffectChips(equipment) : [def?.effect || "Office fixture"];
   const metrics = equipment ? `
     <span><b>Cost</b>${money(equipment.cost)}</span>
@@ -2897,26 +3245,45 @@ function renderItemDetailMarkup({ id, def, equipment, staff, compact }) {
     <span><b>Placed</b>Office map</span>
     <span><b>Staff</b>${staff ? escapeHtml(staff.name) : "None"}</span>`;
   const action = equipment ? `
-    <button type="button" data-detail-buy="${escapeHtml(equipment.id)}" ${canBuy ? "" : "disabled"}>${canBuy ? (owned ? "Buy Another" : "Buy Item") : locked ? "Locked" : noSpace ? "Need Space" : noCash ? "Need Cash" : "Unavailable"}</button>` : `
+    <button class="${availability.canBuy ? "success" : ""}" type="button" data-detail-buy="${escapeHtml(equipment.id)}" data-block-reason="${escapeHtml(availability.reason)}" aria-disabled="${availability.canBuy ? "false" : "true"}">${escapeHtml(availability.actionLabel)}</button>` : `
     <button type="button" data-detail-open-shop="${escapeHtml(itemId)}">Open Office Shop</button>`;
-  const secondaryAction = equipment ? `<button type="button" data-detail-open-shop="${escapeHtml(itemId)}">Show in Office Shop</button>` : "";
+  const secondaryAction = equipment ? `<button class="ghost" type="button" data-detail-open-shop="${escapeHtml(itemId)}">${compact ? "Open Office Shop" : "Find in item list"}</button>` : "";
+  const assignment = equipment ? `
+    <div class="item-assignment">
+      <b>Best for</b>
+      <span>${escapeHtml(equipmentRoleFit(equipment))}</span>
+    </div>` : `
+    <div class="item-assignment">
+      <b>${staff ? "Assigned staff" : "Office role"}</b>
+      <span>${staff ? escapeHtml(`${staff.name} - ${staff.role}`) : "Shared office fixture"}</span>
+    </div>`;
+  const purchasePreview = equipment ? `
+    <div class="purchase-preview ${availability.canBuy ? "available" : "blocked"}">
+      <div class="purchase-preview-head">
+        <b>Purchase preview</b>
+        <span>${availability.canBuy ? "Fits your office" : "Action needed"}</span>
+      </div>
+      <div class="purchase-deltas">
+        <span><b>${availability.afterCash >= 0 ? "Cash after" : "Cash shortfall"}</b>${money(Math.abs(availability.afterCash))}</span>
+        <span><b>Space after</b>${availability.afterUsedSpace}/${equipmentCapacity()}</span>
+      </div>
+      <p>${escapeHtml(availability.reason)}</p>
+    </div>` : "";
   return `
     <div class="item-detail-card ${compact ? "compact" : ""}">
       <div class="item-detail-hero">
         ${equipmentIconMarkup({id: itemId}, "item-icon--large")}
         <div>
           <span class="rec-kicker">${escapeHtml(category)}</span>
-          <h3>${escapeHtml(title)}</h3>
-          <span class="item-state ${locked ? "locked" : owned ? "installed" : "ready"}">${escapeHtml(stateText)}</span>
+          <h3 data-item-detail-title tabindex="-1">${escapeHtml(title)}</h3>
+          <span class="item-state ${availability?.stateClass || "ready"}">${escapeHtml(stateText)}</span>
         </div>
       </div>
       <div class="item-detail-metrics">${metrics}</div>
       <div class="effect-chip-row">${chips.map(chip => `<span>${escapeHtml(chip)}</span>`).join("")}</div>
       <p class="item-explain">${escapeHtml(itemPlainExplanation(equipment, def))}</p>
-      <div class="item-assignment">
-        <b>Assigned staff</b>
-        <span>${staff ? escapeHtml(`${staff.name} - ${staff.role}`) : "None"}</span>
-      </div>
+      ${assignment}
+      ${purchasePreview}
       <div class="actions-row detail-actions">
         ${action}
         ${secondaryAction}
@@ -2925,7 +3292,13 @@ function renderItemDetailMarkup({ id, def, equipment, staff, compact }) {
 }
 
 function bindItemDetailActions(root) {
-  root.querySelectorAll("[data-detail-buy]").forEach(btn => btn.addEventListener("click", () => buyEquipment(btn.dataset.detailBuy)));
+  root.querySelectorAll("[data-detail-buy]").forEach(btn => btn.addEventListener("click", () => {
+    if (btn.getAttribute("aria-disabled") === "true") {
+      toast(btn.dataset.blockReason || "This item is not available yet.");
+      return;
+    }
+    buyEquipment(btn.dataset.detailBuy);
+  }));
   root.querySelectorAll("[data-detail-open-shop]").forEach(btn => btn.addEventListener("click", () => {
     state.selectedEquipmentId = btn.dataset.detailOpenShop || state.selectedEquipmentId;
     const shopTab = document.querySelector('.tab[data-tab="officePanel"]');
@@ -2934,6 +3307,20 @@ function bindItemDetailActions(root) {
     const selectedCard = Array.from(document.querySelectorAll("[data-select-equipment]")).find(card => card.dataset.selectEquipment === state.selectedEquipmentId);
     selectedCard?.scrollIntoView({block: "nearest", inline: "nearest"});
   }));
+}
+
+function equipmentRoleFit(equipment) {
+  const id = equipment?.id || "";
+  if (/actuarial/i.test(id)) return "Actuaries and pricing work";
+  if (/underwriting/i.test(id)) return "Underwriters and risk review";
+  if (/marketing/i.test(id)) return "Marketing specialists";
+  if (/claims/i.test(id)) return "Claims managers and analytics";
+  if (/service/i.test(id)) return "Customer service staff";
+  if (/compliance|filing/i.test(id)) return "Compliance officers";
+  if (/dataScience/i.test(id)) return "Data scientists and forecasts";
+  if (/training/i.test(id)) return "Any staff member in training";
+  if (equipmentCategory(equipment) === "Rest" || equipmentCategory(equipment) === "Mood") return "The whole team";
+  return "The whole office";
 }
 
 function itemPlainExplanation(equipment, def) {
@@ -3137,6 +3524,11 @@ function drawCashChart() {
 
 function initEvents() {
   document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+  $("tutorialBtn").addEventListener("click", startTutorial);
+  $("settingsTutorialBtn").addEventListener("click", startTutorial);
+  $("tutorialBackBtn").addEventListener("click", previousTutorialStep);
+  $("tutorialNextBtn").addEventListener("click", nextTutorialStep);
+  $("tutorialSkipBtn").addEventListener("click", () => closeTutorial(true, "Tutorial skipped. Replay it any time from How to play."));
   $("advanceBtn").addEventListener("click", () => advanceMonth());
   $("autoBtn").addEventListener("click", autoAdvanceYear);
   $("contractBtn").addEventListener("click", consultingContract);
@@ -3163,6 +3555,10 @@ function initEvents() {
   $("resetBtn").addEventListener("click", resetGame);
   $("animationToggle").addEventListener("change", () => { syncUISettingsFromControls(); saveToStorage(); renderKpis(); });
   $("compactMobileToggle").addEventListener("change", () => { syncUISettingsFromControls(); saveToStorage(); renderKpis(); });
+  $("equipmentSort").addEventListener("change", event => {
+    equipmentSort = event.target.value;
+    renderEquipment();
+  });
   ["productType","productName","segment","channel","benefit","annPayment","loading","assumedInterest","mortalityMargin","marketingBudget","underwritingStrictness","serviceQuality","complianceDepth","productComplexity"].forEach(id => {
     $(id).addEventListener("input", () => {
       state.designSettings = getInputs();
@@ -3193,6 +3589,7 @@ function initEvents() {
       renderEvents();
     }
   });
+  document.addEventListener("keydown", handleTutorialKeydown);
   document.addEventListener("keydown", handleGlobalShortcut);
   bindOfficeViewportPan();
 }
@@ -3258,8 +3655,9 @@ function shortcutBlocked(event) {
   const target = event.target;
   const tag = target?.tagName?.toLowerCase();
   const typing = tag === "input" || tag === "select" || tag === "textarea" || target?.isContentEditable;
-  const modalOpen = !$("trainingModal")?.classList.contains("hidden") || !!state.quiz;
-  return typing || modalOpen;
+  const interactive = target?.closest?.("button, a, summary, [role='button'], [role='option'], [contenteditable='true']");
+  const modalOpen = !$("trainingModal")?.classList.contains("hidden") || tutorialIsActive() || !!state.quiz;
+  return event.defaultPrevented || typing || Boolean(interactive) || modalOpen;
 }
 
 function startOfficeAnimationLoop() {
@@ -3284,3 +3682,4 @@ checkAchievements();
 render();
 restoreCurrentTab();
 startOfficeAnimationLoop();
+if (shouldAutoStartTutorial) setTimeout(() => startTutorial(), 180);

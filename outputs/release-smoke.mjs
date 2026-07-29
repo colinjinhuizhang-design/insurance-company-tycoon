@@ -134,11 +134,20 @@ try {
   await cdp.send("Runtime.enable");
   await cdp.send("Log.enable");
   await cdp.send("Page.enable");
+  await cdp.send("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 1000,
+    deviceScaleFactor: 1,
+    mobile: false
+  });
   await cdp.send("Page.navigate", { url: targetUrl });
   await waitForGameReady(cdp);
   await sleep(350);
 
-  await evalJs(cdp, `window.__ictSmokeBackup = localStorage.getItem("insuranceKaihatsuSave")`);
+  await evalJs(cdp, `(() => {
+    window.__ictSmokeBackup = localStorage.getItem("insuranceKaihatsuSave");
+    return true;
+  })()`);
   results.desktop.initial = await evalJs(cdp, `(() => {
     const tabs = [...document.querySelectorAll(".tab")].map(tab => tab.textContent.trim());
     return {
@@ -159,7 +168,39 @@ try {
       globalSolvency: document.querySelector("#globalSolvency")?.textContent,
       globalRisk: document.querySelector("#globalRisk")?.textContent,
       globalSaveStatus: document.querySelector("#globalSaveStatus")?.textContent,
+      tutorialVisible: !document.querySelector("#tutorialOverlay")?.classList.contains("hidden"),
+      hasTutorialReplay: !!document.querySelector("#tutorialBtn") && !!document.querySelector("#settingsTutorialBtn"),
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 2
+    };
+  })()`);
+
+  await capture(cdp, join(root, "outputs", "release-tutorial-desktop.png"));
+  results.interactions.tutorial = await evalJs(cdp, `(async () => {
+    const autoVisible = !document.querySelector("#tutorialOverlay")?.classList.contains("hidden");
+    const firstTitle = document.querySelector("#tutorialTitle")?.textContent;
+    const backgroundInert = document.querySelector(".app-shell")?.inert === true;
+    document.querySelector("#tutorialCard")?.focus();
+    document.querySelector("#tutorialCard")?.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true }));
+    const focusStayedInDialog = document.querySelector("#tutorialCard")?.contains(document.activeElement);
+    document.querySelector("#tutorialNextBtn")?.click();
+    document.querySelector("#tutorialNextBtn")?.click();
+    document.querySelector("#tutorialNextBtn")?.click();
+    await new Promise(resolve => requestAnimationFrame(() => resolve()));
+    const labStep = {
+      label: document.querySelector("#tutorialStepLabel")?.textContent,
+      title: document.querySelector("#tutorialTitle")?.textContent,
+      activePanel: document.querySelector(".panel.active")?.id,
+      expectedFocusTarget: document.querySelector("#project .preset-row")?.classList.contains("tutorial-focus") === true
+    };
+    document.querySelector("#tutorialSkipBtn")?.click();
+    return {
+      autoVisible,
+      firstTitle,
+      backgroundInert,
+      focusStayedInDialog,
+      labStep,
+      closed: document.querySelector("#tutorialOverlay")?.classList.contains("hidden"),
+      persisted: localStorage.getItem("insuranceKaihatsuTutorialSeen")
     };
   })()`);
 
@@ -189,6 +230,9 @@ try {
 
   results.interactions.itemDetails = await evalJs(cdp, `(() => {
     document.querySelector('.tab[data-tab="officePanel"]').click();
+    const itemMonthBeforeKeyboard = state.month;
+    const compareButton = document.querySelector("#equipmentShop [data-inspect-equipment]");
+    compareButton?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
     const card = document.querySelector('#equipmentShop [data-select-equipment="coffee"]') || document.querySelector('#equipmentShop [data-select-equipment]');
     card?.click();
     const afterCard = {
@@ -196,7 +240,13 @@ try {
       selectedCards: document.querySelectorAll("#equipmentShop .compact-equipment-card.selected").length,
       detailHasLargeIcon: !!document.querySelector("#equipmentDetailPanel .item-icon--large"),
       detailText: document.querySelector("#equipmentDetailPanel")?.textContent?.slice(0, 120),
-      actionButtons: document.querySelectorAll("#equipmentDetailPanel button").length
+      actionButtons: document.querySelectorAll("#equipmentDetailPanel button").length,
+      viewButtons: document.querySelectorAll("#equipmentViews [data-equipment-view]").length,
+      fullCapacityWarning: document.querySelector("#equipmentSummary .capacity-overview.full")?.textContent?.includes("office is full"),
+      blockerVisible: !!document.querySelector("#equipmentShop .equipment-availability.blocked"),
+      nestedInteractiveCards: document.querySelectorAll('#equipmentShop [role="button"] button').length,
+      filterPressedState: document.querySelector("#equipmentFilters button")?.getAttribute("aria-pressed"),
+      keyboardDidNotAdvance: state.month === itemMonthBeforeKeyboard
     };
     document.querySelector('.tab[data-tab="studio"]').click();
     const furniture = document.querySelector('#office [data-office-kind="furniture"]');
@@ -207,6 +257,42 @@ try {
       detailText: document.querySelector("#officeDetail")?.textContent?.slice(0, 120)
     };
     return { afterCard, afterFurniture };
+  })()`);
+
+  await evalJs(cdp, `(() => {
+    document.querySelector('.tab[data-tab="officePanel"]').click();
+    document.querySelector('#equipmentShop [data-inspect-equipment="coffee"]')?.click();
+    document.querySelector("#toast")?.classList.add("hidden");
+    document.querySelector("#achievementPop")?.classList.add("hidden");
+    document.querySelector("#officePanel").scrollIntoView({ block: "start" });
+    return true;
+  })()`);
+  await sleep(180);
+  await capture(cdp, join(root, "outputs", "release-office-desktop.png"));
+  await evalJs(cdp, `document.querySelector('.tab[data-tab="studio"]').click()`);
+
+  results.interactions.itemPurchaseUI = await evalJs(cdp, `(() => {
+    state = freshState();
+    state.office = 2;
+    state.cash = 650000;
+    saveToStorage();
+    render();
+    switchTab("officePanel");
+    document.querySelector('[data-equipment-view="affordable"]')?.click();
+    const affordableCards = document.querySelectorAll("#equipmentShop [data-select-equipment]").length;
+    const buy = document.querySelector('#equipmentShop [data-buy-equipment="coffee"]');
+    const enabled = buy?.getAttribute("aria-disabled") === "false";
+    const before = state.equipment.filter(id => id === "coffee").length;
+    buy?.click();
+    const after = state.equipment.filter(id => id === "coffee").length;
+    return {
+      affordableCards,
+      enabled,
+      purchased: after === before + 1,
+      selected: state.selectedEquipmentId,
+      detailState: document.querySelector("#equipmentDetailPanel .item-state")?.textContent,
+      announced: document.querySelector("#toast")?.textContent
+    };
   })()`);
 
   results.interactions.oldSaveNormalize = await evalJs(cdp, `(() => {
@@ -357,6 +443,15 @@ try {
     };
   })()`);
 
+  await sleep(180);
+  await evalJs(cdp, `(() => {
+    if (!document.querySelector("#tutorialOverlay")?.classList.contains("hidden")) {
+      document.querySelector("#tutorialSkipBtn")?.click();
+    }
+    document.querySelector("#toast")?.classList.add("hidden");
+    document.querySelector("#achievementPop")?.classList.add("hidden");
+    return true;
+  })()`);
   await capture(cdp, join(root, "outputs", "release-desktop.png"));
 
   await cdp.send("Emulation.setDeviceMetricsOverride", {
@@ -368,6 +463,10 @@ try {
   await cdp.send("Page.navigate", { url: targetUrl });
   await waitForGameReady(cdp);
   await sleep(350);
+  await evalJs(cdp, `document.querySelector("#tutorialBtn")?.click()`);
+  await sleep(120);
+  await capture(cdp, join(root, "outputs", "release-tutorial-mobile.png"));
+  await evalJs(cdp, `document.querySelector("#tutorialSkipBtn")?.click()`);
   results.mobile.layout = await evalJs(cdp, `(() => ({
     width: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
@@ -397,23 +496,37 @@ try {
       scrollWidth: document.documentElement.scrollWidth,
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 2,
       equipmentColumns: getComputedStyle(document.querySelector("#equipmentShop")).gridTemplateColumns,
-      detailBeforeShop: (() => {
+      shopBeforeDetail: (() => {
         const detail = document.querySelector("#equipmentDetailPanel")?.getBoundingClientRect();
         const shop = document.querySelector(".equipment-shop-panel")?.getBoundingClientRect();
-        return !!detail && !!shop && detail.top < shop.top;
+        return !!detail && !!shop && shop.top < detail.top;
       })(),
       buttonMinHeight: Math.round(document.querySelector("#equipmentShop button")?.getBoundingClientRect().height || 0),
-      detailHasLargeIcon: !!document.querySelector("#equipmentDetailPanel .item-icon--large")
+      detailHasLargeIcon: !!document.querySelector("#equipmentDetailPanel .item-icon--large"),
+      equipmentViewColumns: getComputedStyle(document.querySelector("#equipmentViews")).gridTemplateColumns,
+      filterMinHeight: Math.round(document.querySelector("#equipmentFilters button")?.getBoundingClientRect().height || 0)
     };
   })()`);
-
   await evalJs(cdp, `(() => {
-    if (window.__ictSmokeBackup === null) localStorage.removeItem("insuranceKaihatsuSave");
-    else localStorage.setItem("insuranceKaihatsuSave", window.__ictSmokeBackup);
+    document.querySelector("#toast")?.classList.add("hidden");
+    document.querySelector("#achievementPop")?.classList.add("hidden");
+    document.querySelector("#equipmentDetailPanel")?.scrollIntoView({ block: "start" });
     return true;
   })()`);
+  await sleep(120);
+  await capture(cdp, join(root, "outputs", "release-office-mobile.png"));
+
+  await evalJs(cdp, `(() => {
+    localStorage.removeItem("insuranceKaihatsuTutorialSeen");
+    return !!localStorage.getItem("insuranceKaihatsuSave");
+  })()`);
   await cdp.send("Page.navigate", { url: targetUrl });
-  await sleep(250);
+  await waitForGameReady(cdp);
+  await sleep(350);
+  results.interactions.existingSaveTutorial = await evalJs(cdp, `(() => ({
+    hasSavedRun: !!localStorage.getItem("insuranceKaihatsuSave"),
+    tutorialStayedClosed: document.querySelector("#tutorialOverlay")?.classList.contains("hidden") === true
+  }))()`);
   cdp.close();
 } finally {
   browser.kill();
@@ -429,4 +542,37 @@ try {
   }
 }
 
+const expectedConsoleWarnings = ["AudioContext was not allowed to start"];
+const unexpectedConsoleErrors = results.consoleErrors.filter(message => !expectedConsoleWarnings.some(expected => message.includes(expected)));
+const checks = {
+  "desktop has no horizontal overflow": results.desktop.initial.horizontalOverflow === false,
+  "Phaser office rendered non-blank": results.desktop.initial.enginePixelProbe?.nonBlank === true,
+  "tutorial opens for a fresh run": results.interactions.tutorial?.autoVisible === true,
+  "tutorial isolates the background": results.interactions.tutorial?.backgroundInert === true,
+  "tutorial traps keyboard focus": results.interactions.tutorial?.focusStayedInDialog === true,
+  "tutorial reaches and highlights the Lab": results.interactions.tutorial?.labStep?.expectedFocusTarget === true,
+  "tutorial completion persists": results.interactions.tutorial?.closed === true && results.interactions.tutorial?.persisted === "complete",
+  "existing saves are not interrupted by tutorial": results.interactions.existingSaveTutorial?.hasSavedRun === true && results.interactions.existingSaveTutorial?.tutorialStayedClosed === true,
+  "item cards avoid nested interactive controls": results.interactions.itemDetails?.afterCard?.nestedInteractiveCards === 0,
+  "item keyboard activation does not advance time": results.interactions.itemDetails?.afterCard?.keyboardDidNotAdvance === true,
+  "full capacity guidance is visible": results.interactions.itemDetails?.afterCard?.fullCapacityWarning === true,
+  "item UI purchase succeeds and announces": results.interactions.itemPurchaseUI?.enabled === true && results.interactions.itemPurchaseUI?.purchased === true && results.interactions.itemPurchaseUI?.announced === "Coffee Machine purchased.",
+  "product flow starts successfully": results.interactions.product?.started === true,
+  "core management flows pass": [
+    "hired", "capacityBlocked", "trainingResultReady", "trainingChangedSkill", "renovated",
+    "equipmentBought", "projectStarted", "launched", "championship"
+  ].every(key => results.interactions.coreFlows?.[key] === true),
+  "keyboard save succeeds": results.interactions.keyboardSave === true,
+  "mobile layout has no horizontal overflow": results.mobile.layout?.horizontalOverflow === false && results.mobile430?.horizontalOverflow === false,
+  "mobile shop appears before item detail": results.mobile430?.shopBeforeDetail === true,
+  "mobile item and filter controls meet touch target": results.mobile430?.buttonMinHeight >= 44 && results.mobile430?.filterMinHeight >= 44,
+  "no unexpected console errors": unexpectedConsoleErrors.length === 0
+};
+const failures = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
+results.assertions = {passed: failures.length === 0, checks, failures, unexpectedConsoleErrors};
+
 console.log(JSON.stringify(results, null, 2));
+if (failures.length) {
+  console.error(`Smoke assertions failed: ${failures.join("; ")}`);
+  process.exitCode = 1;
+}

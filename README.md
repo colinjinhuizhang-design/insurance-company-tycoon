@@ -8,7 +8,9 @@ The animated office uses a local Phaser 3 renderer. Dense menus, tabs, product c
 
 The Studio layout uses compact command-board cards rather than nested scrolling side panels, so the page feels more like a game control room.
 
-The Office screen uses compact visual item cards and a shared item detail panel for equipment, furniture effects, assigned staff and buy actions.
+The Office screen uses visual item cards, Installed and Affordable views, exact capacity blockers, purchase previews, and a shared item detail panel for equipment and furniture.
+
+New companies receive a seven-step in-game tutorial covering the control bar, Studio recommendation, Product Lab, staff, equipment and the monthly management loop. The tutorial can be replayed at any time from **How to play** in the header or **Replay Tutorial** in Settings.
 
 Published URL: https://colinjinhuizhang-design.github.io/insurance-company-tycoon/
 
@@ -34,15 +36,14 @@ http://localhost:8000
 
 ## How To Play
 
-1. Start in Studio and review the recommended next action.
-2. Hire staff in Staff.
-3. Open Lab and choose a preset if you want a safer product design.
-4. Check the launch readiness meter before starting development.
-5. Start an insurance product in Lab.
-6. Buy equipment or renovate in Office when capacity is tight; click an item card or office object to inspect its effects.
-7. Advance months from the global control bar.
-8. Watch cash, claims, reputation, risk and solvency.
-9. Train staff, enter the Championship, and collect awards.
+1. Follow the first-run tutorial or open **How to play** from the header.
+2. Start in Studio and review the recommended next action.
+3. Open Lab, choose Safe Starter, and check launch readiness.
+4. Start an insurance product, then advance one month at a time.
+5. Hire or train staff when the pipeline needs stronger skills.
+6. Renovate in Office when capacity is full, then compare and buy equipment.
+7. Watch cash, claims, reputation, risk and solvency.
+8. Enter the Championship and collect awards as the company grows.
 
 ## Project Structure
 

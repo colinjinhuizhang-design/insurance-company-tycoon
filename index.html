@@ -10,11 +10,15 @@
 <body>
   <div class="app-shell">
     <header class="topbar pixel-card">
-      <div>
+      <div class="topbar-copy">
         <p class="eyebrow">Original Actuarial Management Tycoon</p>
         <h1>Insurance Company Tycoon</h1>
         <p class="subtitle">Build a tiny insurance company, hire specialists, design products, manage risk and win trophies.</p>
       </div>
+      <button id="tutorialBtn" class="tutorial-launch ghost" type="button" aria-haspopup="dialog" aria-label="Open game tutorial">
+        <span class="tutorial-launch-icon" aria-hidden="true">?</span>
+        <span class="tutorial-launch-label">How to play</span>
+      </button>
     </header>
 
     <section class="setup pixel-card home-setup">
@@ -88,7 +92,7 @@
               <div id="officeDetail" class="summary-box">Click a staff member or furniture item to inspect it.</div>
               <div id="officeEventLog" class="summary-box">Office routines will appear here.</div>
             </div>
-            <div id="toastLog" class="ticker">Open the Lab or recruit a specialist.</div>
+            <div id="toastLog" class="ticker" role="status" aria-live="polite">Open the Lab or recruit a specialist.</div>
           </article>
 
           <aside class="side-stack">
@@ -312,11 +316,23 @@
             <div class="card-head">
               <div>
                 <h2>Equipment shop</h2>
-                <p class="muted">Buy compact office items, workstations and morale boosters.</p>
+                <p class="muted">Compare office upgrades, see what fits, and build the right workplace for your team.</p>
               </div>
-              <span class="status-pill">Visual item cards</span>
+              <span class="status-pill">Office inventory</span>
             </div>
-            <div id="equipmentShop" class="equipment-grid"></div>
+            <div class="equipment-shop-toolbar">
+              <div id="equipmentViews" class="equipment-view-switch" role="group" aria-label="Equipment view"></div>
+              <label class="equipment-sort">Sort
+                <select id="equipmentSort">
+                  <option value="recommended">Recommended</option>
+                  <option value="price-low">Price: low to high</option>
+                  <option value="price-high">Price: high to low</option>
+                  <option value="space">Space needed</option>
+                </select>
+              </label>
+            </div>
+            <div id="equipmentShopMeta" class="equipment-shop-meta" role="status" aria-live="polite"></div>
+            <div id="equipmentShop" class="equipment-grid" aria-label="Equipment items"></div>
           </article>
           <aside class="pixel-card equipment-detail-panel" id="equipmentDetailPanel">
             Select an item to inspect its effect, cost and office role.
@@ -404,6 +420,7 @@
               <button id="settingsSaveBtn" class="ghost" type="button">Save</button>
               <button id="settingsLoadBtn" class="ghost" type="button">Load</button>
               <button id="resetBtn" class="danger" type="button">Reset Run</button>
+              <button id="settingsTutorialBtn" class="ghost" type="button">Replay Tutorial</button>
             </div>
             <div class="settings-toggles">
               <label class="toggle-row">
@@ -447,8 +464,33 @@ Shortcuts pause while typing or while a quiz/training modal is open.</div>
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
-  <div id="achievementPop" class="achievement-pop hidden"></div>
+  <div id="tutorialOverlay" class="tutorial-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
+    <section id="tutorialCard" class="tutorial-card pixel-card" tabindex="-1">
+      <div class="tutorial-progress-row">
+        <span id="tutorialStepLabel">Step 1 of 7</span>
+        <button id="tutorialSkipBtn" class="tutorial-skip" type="button">Skip tour</button>
+      </div>
+      <div class="tutorial-progress-track" role="progressbar" aria-label="Tutorial progress" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1">
+        <span id="tutorialProgressFill"></span>
+      </div>
+      <div class="tutorial-message">
+        <span id="tutorialIcon" class="tutorial-icon" aria-hidden="true">HQ</span>
+        <div>
+          <p id="tutorialEyebrow" class="eyebrow">Welcome, CEO</p>
+          <h2 id="tutorialTitle">Build a resilient insurer</h2>
+        </div>
+      </div>
+      <p id="tutorialBody" class="tutorial-body"></p>
+      <div id="tutorialTip" class="tutorial-tip"></div>
+      <div class="tutorial-actions">
+        <button id="tutorialBackBtn" class="ghost" type="button">Back</button>
+        <button id="tutorialNextBtn" class="primary" type="button">Next</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <div id="achievementPop" class="achievement-pop hidden" role="status" aria-live="polite"></div>
   <script src="vendor/phaser.min.js"></script>
   <script src="src/data/staffSprites.js"></script>
   <script src="src/data/roleVisuals.js"></script>

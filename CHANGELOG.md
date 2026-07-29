@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.3.0 - Guided Start and Item Workbench
+
+### Added
+
+- Seven-step first-run tutorial covering company goals, global controls, Studio recommendations, product design, staff, equipment and the monthly loop.
+- Persistent tutorial completion with replay controls in the header and Settings.
+- All, Installed and Affordable equipment views with live counts and sorting.
+- Equipment-space progress, a direct renovation action, exact purchase blockers and cash/space purchase previews.
+- Desktop and mobile smoke coverage for tutorial persistence, item states, capacity guidance, focus behavior and responsive controls.
+
+### Improved
+
+- Item cards now use clear native Compare and Buy actions without nested interactive controls.
+- Equipment details show exact effect values, role fit, ownership, availability and post-purchase resources.
+- Category filters expose counts and selected-state semantics.
+- Mobile item selection moves players to the detail panel and filter controls meet a 44 px touch target.
+- Shop and tutorial status messages are announced to assistive technology.
+
+### Fixed
+
+- Keyboard activation of item controls no longer advances the game month.
+- A full starting office now explains why purchases are blocked and how to unlock more equipment space.
+
 ## 1.2.2 - Flatter Command Board Layout
 
 ### Improved
